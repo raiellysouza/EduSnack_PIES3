@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "448521346549",
+    "project_id": "edusnack-1e88c",
+    "storage_bucket": "edusnack-1e88c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:448521346549:android:f0d694bff5007e1e06d4bc",
+        "android_client_info": {
+          "package_name": "com.example.edusnack"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDBNyz3NYLT97XGq3KjlIq4mFNSSRJlrik"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
