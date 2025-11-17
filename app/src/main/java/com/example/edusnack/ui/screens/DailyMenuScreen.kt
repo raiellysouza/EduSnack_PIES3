@@ -94,18 +94,25 @@ fun DailyMenuScreen(nav: NavController) {
                 )
             }
 
+            // ITEM 1: Massa Primavera (Clicável)
             item {
-                FullDetailCard(
-                    data = MenuItemData(
-                        title = "Massa Primavera",
-                        description = "Massa fresca com legumes da época em um molho cremoso leve.",
-                        price = 5.99,
-                        imageUrl = "https://example.com/pasta.jpg", // Coloque uma URL real aqui
-                        calories = 450,
-                        allergens = "Laticínios, Glúten",
-                        tag = "Vegetariano"
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { nav.navigate("detalhes/3") } // Redireciona para o ID 3
+                ) {
+                    FullDetailCard(
+                        data = MenuItemData(
+                            title = "Massa Primavera",
+                            description = "Massa fresca com legumes da época em um molho cremoso leve.",
+                            price = 5.99,
+                            imageUrl = "https://example.com/pasta.jpg",
+                            calories = 450,
+                            allergens = "Laticínios, Glúten",
+                            tag = "Vegetariano"
+                        )
                     )
-                )
+                }
                 Spacer(modifier = Modifier.height(32.dp))
             }
 
@@ -120,38 +127,52 @@ fun DailyMenuScreen(nav: NavController) {
                 )
             }
 
+            // ITEM 2: Salada (Clicável)
             item {
-                FullDetailCard(
-                    data = MenuItemData(
-                        title = "Salada de Jardim",
-                        description = "Mix de folhas verdes com tomates cereja, pepinos e um molho vinagrete.",
-                        price = 2.50,
-                        imageUrl = "https://example.com/salad.jpg",
-                        calories = 150,
-                        allergens = "Nenhum"
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { nav.navigate("detalhes/4") } // Redireciona para o ID 4
+                ) {
+                    FullDetailCard(
+                        data = MenuItemData(
+                            title = "Salada de Jardim",
+                            description = "Mix de folhas verdes com tomates cereja, pepinos e um molho vinagrete.",
+                            price = 2.50,
+                            imageUrl = "https://example.com/salad.jpg",
+                            calories = 150,
+                            allergens = "Nenhum"
+                        )
                     )
-                )
+                }
                 Spacer(modifier = Modifier.height(24.dp))
             }
 
+            // ITEM 3: Frutas (Clicável)
             item {
-                FullDetailCard(
-                    data = MenuItemData(
-                        title = "Copo de Frutas",
-                        description = "Uma mistura refrescante de frutas da época.",
-                        price = 1.75,
-                        imageUrl = "https://example.com/fruit.jpg",
-                        calories = 100,
-                        allergens = "Nenhum"
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { nav.navigate("detalhes/5") } // Redireciona para o ID 5
+                ) {
+                    FullDetailCard(
+                        data = MenuItemData(
+                            title = "Copo de Frutas",
+                            description = "Uma mistura refrescante de frutas da época.",
+                            price = 1.75,
+                            imageUrl = "https://example.com/fruit.jpg",
+                            calories = 100,
+                            allergens = "Nenhum"
+                        )
                     )
-                )
+                }
                 Spacer(modifier = Modifier.height(24.dp))
             }
         }
     }
 }
 
-// --- COMPONENTE DO CARD COMPLETO (Baseado na imagem enviada) ---
+// --- COMPONENTE DO CARD COMPLETO (Inalterado) ---
 @Composable
 fun FullDetailCard(data: MenuItemData) {
     Column(modifier = Modifier.fillMaxWidth()) {

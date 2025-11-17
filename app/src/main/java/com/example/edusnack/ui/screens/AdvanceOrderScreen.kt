@@ -1,14 +1,13 @@
 package com.example.edusnack.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -30,7 +29,6 @@ import com.example.edusnack.ui.components.HighlightItemCard
 fun AdvanceOrderScreen(nav: NavController) {
     Scaffold(
         topBar = {
-            // Header Simples
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -51,7 +49,7 @@ fun AdvanceOrderScreen(nav: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(Color.White) // Fundo branco
+                .background(Color.White)
                 .padding(horizontal = 24.dp)
         ) {
 
@@ -65,7 +63,6 @@ fun AdvanceOrderScreen(nav: NavController) {
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
 
-                // Lista Horizontal
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
@@ -87,56 +84,78 @@ fun AdvanceOrderScreen(nav: NavController) {
                 )
             }
 
-            // Lista de Itens (Hardcoded para exemplo, mas viria do ViewModel)
+            // ITEM 1: Salada Caesar
             item {
-                HighlightItemCard(
-                    tag = "Popular",
-                    title = "Salada Caesar de Frango",
-                    description = "Alface romana crocante, frango grelhado, queijo parmesão e croutons com molho Caesar.",
-                    price = 8.99,
-                    imageUrl = "https://example.com/caesar.jpg"
-                )
+                // Envolvemos o card em um Box clicável
+                Box(
+                    modifier = Modifier.clickable {
+                        // Navega para a tela de detalhes (use o ID se configurou rota dinâmica)
+                        nav.navigate("detalhes/1")
+                    }
+                ) {
+                    HighlightItemCard(
+                        tag = "Popular",
+                        title = "Salada Caesar de Frango",
+                        description = "Alface romana crocante, frango grelhado, queijo parmesão e croutons com molho Caesar.",
+                        price = 8.99,
+                        imageUrl = "https://example.com/caesar.jpg",
+                    )
+                }
                 Spacer(modifier = Modifier.height(24.dp))
             }
 
+            // ITEM 2: Sanduíche
             item {
-                HighlightItemCard(
-                    tag = "Novo",
-                    title = "Sanduíche de Peru e Suíço",
-                    description = "Peito de peru fatiado, queijo suíço, alface, tomate e maionese no pão integral.",
-                    price = 6.49,
-                    imageUrl = "https://example.com/peru.jpg"
-                )
+                Box(
+                    modifier = Modifier.clickable {
+                        nav.navigate("detalhes/2")
+                    }
+                ) {
+                    HighlightItemCard(
+                        tag = "Novo",
+                        title = "Sanduíche de Peru e Suíço",
+                        description = "Peito de peru fatiado, queijo suíço, alface, tomate e maionese no pão integral.",
+                        price = 6.49,
+                        imageUrl = "https://example.com/peru.jpg"
+                    )
+                }
                 Spacer(modifier = Modifier.height(24.dp))
             }
 
+            // ITEM 3: Massa
             item {
-                HighlightItemCard(
-                    tag = "Vegetariano",
-                    title = "Massa Primavera",
-                    description = "Massa penne com uma mistura de vegetais frescos em um molho leve de alho e ervas.",
-                    price = 7.99,
-                    imageUrl = "https://example.com/massa_primavera.jpg"
-                )
+                Box(
+                    modifier = Modifier.clickable {
+                        nav.navigate("detalhes/3")
+                    }
+                ) {
+                    HighlightItemCard(
+                        tag = "Vegetariano",
+                        title = "Massa Primavera",
+                        description = "Massa penne com uma mistura de vegetais frescos em um molho leve de alho e ervas.",
+                        price = 7.99,
+                        imageUrl = "https://example.com/massa_primavera.jpg"
+                    )
+                }
                 Spacer(modifier = Modifier.height(24.dp))
             }
         }
     }
 }
 
-// --- COMPONENTE AUXILIAR: Item de Categoria (Quadrado Grande) ---
+// ... Restante do código (CategoryItem) permanece igual ...
 @Composable
 fun CategoryItem(name: String, imageUrl: String) {
     Column(
         horizontalAlignment = Alignment.Start,
-        modifier = Modifier.width(140.dp) // Largura fixa para manter padrão
+        modifier = Modifier.width(140.dp)
     ) {
         AsyncImage(
             model = imageUrl,
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier
-                .size(140.dp) // Quadrado perfeito
+                .size(140.dp)
                 .clip(RoundedCornerShape(12.dp))
                 .background(Color(0xFFF0F0F0))
         )
