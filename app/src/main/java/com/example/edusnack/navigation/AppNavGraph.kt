@@ -26,6 +26,8 @@ fun AppNavGraph(start: String = "welcome") {
         composable("homeAluno") { HomeScreen(navController, cardapioVm = cardapioVm, carrinhoVm = carrinhoVm) }
 
         composable("dailyMenu") { DailyMenuScreen(navController)  }
+        composable("advanceOrder") { AdvanceOrderScreen(navController)  }
+
 
         composable("detalhes/{itemId}", arguments = listOf(navArgument("itemId"){ type = NavType.StringType })) { back ->
             val itemId = back.arguments?.getString("itemId") ?: ""
