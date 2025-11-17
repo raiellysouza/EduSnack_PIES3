@@ -27,6 +27,7 @@ fun AppNavGraph(start: String = "welcome") {
 
         composable("dailyMenu") { DailyMenuScreen(navController)  }
         composable("advanceOrder") { AdvanceOrderScreen(navController)  }
+        composable("studentAccount") { StudentAccountScreen(navController) }
 
 
         composable("detalhes/{itemId}", arguments = listOf(navArgument("itemId"){ type = NavType.StringType })) { back ->
