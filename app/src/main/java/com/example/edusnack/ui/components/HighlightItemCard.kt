@@ -1,9 +1,13 @@
 package com.example.edusnack.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -13,18 +17,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 
 @Composable
-fun FoodItemCard(
+fun HighlightItemCard(
     title: String,
     description: String,
-    price: String,
+    price: Double,
     imageUrl: String,
-    isPopular: Boolean = false
+    tag: String? = null // Ex: "Popular", "Novo", "Vegetariano"
 ) {
     Row(
         modifier = Modifier
@@ -34,70 +37,65 @@ fun FoodItemCard(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
+        // --- LADO ESQUERDO ---
         Column(
             modifier = Modifier
                 .weight(1f)
                 .padding(end = 16.dp)
         ) {
-            if (isPopular) {
+            // Tag (Opcional)
+            if (tag != null) {
                 Text(
-                    text = "Popular",
+                    text = tag,
                     color = Color(0xFF4CAF50), // Verde
-                    fontSize = 14.sp,
+                    fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
             }
 
+            // Título
             Text(
                 text = title,
                 color = Color.Black,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(bottom = 8.dp)
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 4.dp)
             )
 
+            // Descrição
             Text(
                 text = description,
-                color = Color(0xFF4CAF50),
-                fontSize = 14.sp,
-                lineHeight = 20.sp,
+                color = Color(0xFF4CAF50), // Verde Texto
+                fontSize = 12.sp,
+                lineHeight = 16.sp,
                 modifier = Modifier.padding(bottom = 12.dp)
             )
 
+            // Badge de Preço
             Surface(
-                color = Color(0xFFE8F5E9),
+                color = Color(0xFFE8F5E9), // Fundo verde bem claro
                 shape = RoundedCornerShape(8.dp)
             ) {
                 Text(
-                    text = price,
+                    text = "R$ %.2f".format(price).replace('.', ','),
                     color = Color.Black,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                 )
             }
         }
 
+        // --- LADO DIREITO (Imagem) ---
         AsyncImage(
             model = imageUrl,
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier
-                .size(120.dp)
+                .size(100.dp)
                 .clip(RoundedCornerShape(12.dp))
                 .background(Color.LightGray)
         )
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun FoodItemCardPreview() {
-    FoodItemCard(
-        title = "Salada Caesar de Frango",
-        description = "Alface romana crocante, frango grelhado, queijo parmesão e croutons com molho Caesar.",
-        price = "R$ 8,99",
-        imageUrl = "https://githun.com/cvitorandrade.png",
-        isPopular = true
-    )
 }
