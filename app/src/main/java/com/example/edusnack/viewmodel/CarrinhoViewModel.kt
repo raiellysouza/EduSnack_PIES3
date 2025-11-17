@@ -40,9 +40,9 @@ class CarrinhoViewModel(
 
     fun finalizarCompra(usuarioId: String, callback: (String?) -> Unit) {
         viewModelScope.launch {
-            val pedido = Pedido(usuarioId = usuarioId, itens = _itens.value, valorTotal = total())
+            val pedido = Pedido(alunoId = usuarioId)
             val id = pedidoRepo.salvarPedido(pedido)
-            callback(id)
+            callback(id.toString())
             if (id != null) limparCarrinho()
         }
     }

@@ -18,4 +18,13 @@ class PedidoRepository(
     } catch (e: Exception) {
         Result.failure(e)
     }
+
+    suspend fun salvarPedido (pedido: Pedido): Result<String> = try {
+        pedidos.document().collection("pedidos").add(pedido).await()
+        Result.success(pedido.id)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+
 }

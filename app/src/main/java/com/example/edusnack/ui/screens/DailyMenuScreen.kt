@@ -26,8 +26,7 @@ val GreenText = Color(0xFF4CAF50)
 val DarkGreenText = Color(0xFF2E7D32)
 val LightGrayDivider = Color(0xFFEEEEEE)
 
-// Adicione isso no seu arquivo de modelos ou no topo do arquivo para testar
-data class MenuItemDat(
+data class MenuItemData(
     val title: String,
     val description: String,
     val price: Double,
