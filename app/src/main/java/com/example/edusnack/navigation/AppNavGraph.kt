@@ -24,23 +24,23 @@ import com.example.edusnack.viewmodel.CardapioViewModel
 import com.example.edusnack.viewmodel.CarrinhoViewModel
 import com.google.firebase.auth.FirebaseAuth
 
-// ... imports ...
-
 @Composable
 fun AppNavGraph(start: String = "welcome") {
     val navController = rememberNavController()
-    // ViewModels...
+    val cardapioVm: CardapioViewModel = viewModel()
+    val carrinhoVm: CarrinhoViewModel = viewModel()
 
     NavHost(navController = navController, startDestination = start) {
 
-        // ... rotas de login, welcome, etc ...
+        composable("welcome") { WelcomeScreen(navController) }
+        composable("login") { LoginScreen(navController) }
+        composable("register") { RegisterScreen(navController) }
+        composable("forgot") { ForgotPasswordScreen(navController) }
 
         composable("homeAluno") { HomeScreen(navController, cardapioVm, carrinhoVm) }
 
-        // --- GARANTA QUE ESSA LINHA DO CANTINEIRO ESTEJA AQUI ---
         composable("homeCantina") { CanteenDashboardScreen(navController) }
 
-        // --- E QUE AS ROTAS DO SEU COLEGA TAMBÉM ESTEJAM AQUI ---
         composable("dailyMenu") { DailyMenuScreen(navController) }
         composable("advanceOrder") { AdvanceOrderScreen(navController) }
         composable("studentAccount") { StudentAccountScreen(navController) }
@@ -54,16 +54,17 @@ fun AppNavGraph(start: String = "welcome") {
             ItemDetailsScreen(navController, itemId = itemId)
         }
 
-        composable("carrinho") { CarrinhoScreen(navController) }
+        composable("carrinho") { 
+            val usuarioId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+            CarrinhoScreen(navController, usuarioId, carrinhoVm) 
+        }
 
-        // Rota de confirmação que veio da develop
         composable(
             route = "pedidoConfirmado/{pedidoId}",
             arguments = listOf(navArgument("pedidoId") { type = NavType.StringType })
         ) { backStackEntry ->
             val pedidoId = backStackEntry.arguments?.getString("pedidoId") ?: ""
-            // Verifique se o nome da tela abaixo bate com o que veio da develop (OrderConfirmationScreen ou PedidoConfirmadoScreen)
-            OrderConfirmationScreen(navController, pedidoId)
+            PedidoConfirmadoScreen(navController, pedidoId)
         }
     }
 }
