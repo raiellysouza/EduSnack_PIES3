@@ -118,7 +118,7 @@ fun CanteenDashboardScreen(nav: NavController) {
                     text = "Criar cardápio",
                     backgroundColor = GreenPrimary,
                     textColor = DarkText,
-                    onClick = { /* nav.navigate("create_menu") */ }
+                    onClick = { nav.navigate("create_menu") }
                 )
                 Spacer(modifier = Modifier.height(12.dp))
             }

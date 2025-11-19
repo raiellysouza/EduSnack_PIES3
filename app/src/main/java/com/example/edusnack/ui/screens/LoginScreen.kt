@@ -34,7 +34,7 @@ fun LoginScreen(nav: NavController, vm: AuthViewModel = viewModel()) {
         // Verifica qual tipo foi selecionado na UI antes de navegar
         val destino = when (tipo) {
             "cantineiro" -> "homeCantina" // Vai para o Painel da Cantina
-            "responsável" -> "homeResponsavel" // Caso crie essa tela no futuro
+            "responsável" -> "myDependents" // Redireciona para a tela de dependentes
             else -> "homeAluno" // Padrão: vai para Home do Aluno
         }
 
