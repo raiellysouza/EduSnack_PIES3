@@ -128,7 +128,7 @@ fun CanteenDashboardScreen(nav: NavController) {
                     text = "Ver pedidos",
                     backgroundColor = Color(0xFFE8F5E9), // Verde bem claro/Cinza
                     textColor = DarkText,
-                    onClick = { /* nav.navigate("view_orders") */ }
+                    onClick = { nav.navigate("view_orders") }
                 )
                 Spacer(modifier = Modifier.height(12.dp))
             }

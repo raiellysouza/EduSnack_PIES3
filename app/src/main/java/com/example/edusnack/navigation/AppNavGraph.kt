@@ -26,6 +26,7 @@ fun AppNavGraph(start: String = "welcome") {
         composable("homeAluno") { HomeScreen(navController, cardapioVm = cardapioVm, carrinhoVm = carrinhoVm) }
         composable("homeCantina") { CanteenDashboardScreen(navController) }
         composable("create_menu") { CreateMenuScreen(navController) }
+        composable("view_orders") { ViewOrdersScreen(navController) }
 
         composable("dailyMenu") { DailyMenuScreen(navController)  }
         composable("advanceOrder") { AdvanceOrderScreen(navController)  }
