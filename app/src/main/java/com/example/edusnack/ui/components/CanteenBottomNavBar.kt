@@ -7,8 +7,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.ListAlt
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.ReceiptLong
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,9 +29,9 @@ fun CanteenBottomNavBar(nav: NavController) {
             .padding(vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
-        CanteenBottomItem("Início", Icons.AutoMirrored.Filled.List) { /* nav.navigate("home_canteen") */ }
-        CanteenBottomItem("Cardápio", Icons.Default.CalendarToday) { /* nav.navigate("menu_mgmt") */ }
-        CanteenBottomItem("Pedidos", Icons.Default.ReceiptLong) { /* nav.navigate("orders_mgmt") */ }
+        CanteenBottomItem("Início", Icons.AutoMirrored.Filled.List) { nav.navigate("homeCantina") }
+        CanteenBottomItem("Cardápio", Icons.Default.CalendarToday) { nav.navigate("manage_menu") }
+        CanteenBottomItem("Pedidos", Icons.Default.ListAlt) { nav.navigate("view_orders") }
         CanteenBottomItem("Conta", Icons.Default.Person) { /* nav.navigate("account_canteen") */ }
         CanteenBottomItem("Relatórios", Icons.Default.Analytics) { /* nav.navigate("reports") */ }
     }
