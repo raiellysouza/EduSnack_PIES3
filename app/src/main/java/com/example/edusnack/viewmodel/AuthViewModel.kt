@@ -4,29 +4,60 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.edusnack.data.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class AuthViewModel(
-    private val repository: AuthRepository = AuthRepository()
+    private val repo: AuthRepository = AuthRepository()
 ) : ViewModel() {
 
-    private val _authState = MutableStateFlow<String?>(null)
-    val authState = _authState.asStateFlow()
+    private val _loading = MutableStateFlow(false)
+    val loading: StateFlow<Boolean> = _loading
 
-    fun register(email: String, password: String) {
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error
+
+    private val _success = MutableStateFlow(false)
+    val success: StateFlow<Boolean> = _success
+
+    fun login(email: String, pass: String) {
         viewModelScope.launch {
-            val result = repository.registerUser(email, password)
-            _authState.value = result.exceptionOrNull()?.message ?: "registered"
+            _loading.value = true
+            _error.value = null
+            val result = repo.login(email, pass)
+            _loading.value = false
+
+            if (result.isSuccess) _success.value = true
+            else _error.value = result.exceptionOrNull()?.message
         }
     }
 
-    fun login(email: String, password: String) {
+    fun register(nome: String, email: String, pass: String, tipo: String) {
         viewModelScope.launch {
-            val result = repository.loginUser(email, password)
-            _authState.value = result.exceptionOrNull()?.message ?: "logged_in"
+            _loading.value = true
+            _error.value = null
+            val result = repo.register(nome, email, pass, tipo)
+            _loading.value = false
+
+            if (result.isSuccess) _success.value = true
+            else _error.value = result.exceptionOrNull()?.message
         }
     }
 
-    fun logout() = repository.logoutUser()
+    fun forgotPassword(email: String) {
+        viewModelScope.launch {
+            _loading.value = true
+            _error.value = null
+            val result = repo.resetPassword(email)
+            _loading.value = false
+
+            if (result.isSuccess) _success.value = true
+            else _error.value = result.exceptionOrNull()?.message
+        }
+    }
+
+    fun clearState() {
+        _success.value = false
+        _error.value = null
+    }
 }

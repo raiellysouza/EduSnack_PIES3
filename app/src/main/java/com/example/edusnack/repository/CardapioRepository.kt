@@ -8,54 +8,35 @@ import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
 import java.util.*
 
-class CardapioRepository {
-
-    private val firestore = FirebaseFirestore.getInstance()
-    private val collection = firestore.collection("cardapios")
-    private val storage = FirebaseStorage.getInstance("gs://edusnack-1e88c.firebasestorage.app")
+class CardapioRepository(
+    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance(),
+    private val storage: FirebaseStorage = FirebaseStorage.getInstance()
+) {
+    private val col = firestore.collection("cardapios")
 
     suspend fun adicionarCardapio(cardapio: Cardapio, imagemUri: Uri?): Result<String> {
-        cardapio.validarOuErro()?.let {
-            return Result.failure(IllegalArgumentException(it))
-        }
-
         return try {
             if (imagemUri != null) {
-                val url = uploadImagem(cardapio.autorId, imagemUri)
-                cardapio.imagemUrl = url
+                cardapio.imagemUrl = uploadImagem(cardapio.autorId, imagemUri)
             }
-
-            cardapio.id = collection.document().id
+            val id = col.document().id
+            cardapio.id = id
             cardapio.criadoEm = Timestamp.now()
             cardapio.atualizadoEm = Timestamp.now()
-
-            collection.document(cardapio.id).set(cardapio).await()
-
-            Result.success(cardapio.id)
+            col.document(id).set(cardapio).await()
+            Result.success(id)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
     suspend fun editarCardapio(cardapio: Cardapio, imagemUri: Uri?): Result<Unit> {
-        cardapio.validarOuErro()?.let {
-            return Result.failure(IllegalArgumentException(it))
-        }
-
-        if (cardapio.id.isEmpty()) {
-            return Result.failure(IllegalArgumentException("ID vazio"))
-        }
-
         return try {
             if (imagemUri != null) {
-                val url = uploadImagem(cardapio.autorId, imagemUri)
-                cardapio.imagemUrl = url
+                cardapio.imagemUrl = uploadImagem(cardapio.autorId, imagemUri)
             }
-
             cardapio.atualizadoEm = Timestamp.now()
-
-            collection.document(cardapio.id).set(cardapio).await()
-
+            col.document(cardapio.id).set(cardapio).await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -64,37 +45,26 @@ class CardapioRepository {
 
     suspend fun listarTodos(): Result<List<Cardapio>> {
         return try {
-            val snapshot = collection.get().await()
-            Result.success(snapshot.toObjects(Cardapio::class.java))
+            val snap = col.get().await()
+            Result.success(snap.toObjects(Cardapio::class.java))
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
     suspend fun buscarPorId(id: String): Result<Cardapio> {
-        if (id.isBlank()) return Result.failure(IllegalArgumentException("ID vazio"))
-
         return try {
-            val doc = collection.document(id).get().await()
-            val item = doc.toObject(Cardapio::class.java)
-
-            if (item == null) {
-                Result.failure(NoSuchElementException("Cardápio não encontrado"))
-            } else {
-                Result.success(item)
-            }
+            val doc = col.document(id).get().await()
+            val c = doc.toObject(Cardapio::class.java)
+            if (c != null) Result.success(c) else Result.failure(NoSuchElementException("Não encontrado"))
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    suspend fun removerCardapio(id: String): Result<Unit> {
-        if (id.isEmpty()) {
-            return Result.failure(IllegalArgumentException("ID vazio"))
-        }
-
+    suspend fun remover(id: String): Result<Unit> {
         return try {
-            collection.document(id).delete().await()
+            col.document(id).delete().await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -103,13 +73,7 @@ class CardapioRepository {
 
     suspend fun alterarStatus(id: String, ativo: Boolean): Result<Unit> {
         return try {
-            collection.document(id).update(
-                mapOf(
-                    "ativo" to ativo,
-                    "atualizadoEm" to Timestamp.now()
-                )
-            ).await()
-
+            col.document(id).update(mapOf("ativo" to ativo, "atualizadoEm" to Timestamp.now())).await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -117,11 +81,9 @@ class CardapioRepository {
     }
 
     private suspend fun uploadImagem(autorId: String, uri: Uri): String {
-        val fileName = "cardapios/$autorId/${UUID.randomUUID()}"
-        val ref = storage.reference.child(fileName)
-
+        val name = "cardapios/$autorId/${UUID.randomUUID()}.jpg"
+        val ref = storage.reference.child(name)
         ref.putFile(uri).await()
-
         return ref.downloadUrl.await().toString()
     }
 }

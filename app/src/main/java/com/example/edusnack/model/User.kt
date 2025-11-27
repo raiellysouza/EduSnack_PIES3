@@ -1,15 +1,9 @@
 package com.example.edusnack.model
 
-data class Usuario(
+data class User(
     val id: String = "",
     val nome: String = "",
     val email: String = "",
-    val tipo: TipoUsuario = TipoUsuario.ALUNO,
-    val saldo: Double = 0.0
+    val tipo: String = "", // aluno | responsavel | cantina
+    val fotoUrl: String = ""
 )
-
-enum class TipoUsuario {
-    ALUNO,
-    RESPONSAVEL,
-    CANTINA
-}
