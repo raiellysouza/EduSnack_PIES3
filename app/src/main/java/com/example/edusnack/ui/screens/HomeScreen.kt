@@ -13,17 +13,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.edusnack.model.Cardapio
 import com.example.edusnack.ui.components.BottomNavBar
 import com.example.edusnack.viewmodel.CardapioViewModel
+import com.example.edusnack.viewmodel.CarrinhoViewModel
 
 @Composable
-fun HomeScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
-
-    val itens by vm.itens.collectAsState()
+fun HomeScreen(
+    nav: NavController,
+    cardapioVm: CardapioViewModel,
+    carrinhoVm: CarrinhoViewModel
+) {
+    val itens by cardapioVm.itens.collectAsState()
 
     Scaffold(
         bottomBar = { BottomNavBar(nav) }
@@ -54,6 +57,7 @@ fun HomeScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
                             else -> "Massas"
                         }
                     )
+                    Spacer(Modifier.width(12.dp))
                 }
             }
 

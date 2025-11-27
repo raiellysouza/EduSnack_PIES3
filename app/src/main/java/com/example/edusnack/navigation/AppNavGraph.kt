@@ -1,16 +1,27 @@
 package com.example.edusnack.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.navigation.NavHostController
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.edusnack.ui.screens.*
+import com.example.edusnack.viewmodel.CardapioViewModel
+import com.example.edusnack.viewmodel.CarrinhoViewModel
 
 @Composable
-fun AppNavGraph(navController: NavHostController) {
+fun AppNavGraph(start: String = "welcome") {
+    val navController = rememberNavController()
+
+    // create viewmodels here so they are shared between composables
+    val cardapioVm: CardapioViewModel = viewModel()
+    val carrinhoVm: CarrinhoViewModel = viewModel()
+
     NavHost(
         navController = navController,
-        startDestination = "welcome"
+        startDestination = start
     ) {
 
         composable("welcome") {
@@ -29,8 +40,35 @@ fun AppNavGraph(navController: NavHostController) {
             ForgotPasswordScreen(navController)
         }
 
-        composable("homeAluno") { /* Próxima camada */ }
+        composable("home") {
+            HomeScreen(navController, cardapioVm = cardapioVm, carrinhoVm = carrinhoVm)
+        }
 
-        composable("homeCantina") { /* Próxima camada */ }
+        composable(
+            route = "detalhes/{itemId}",
+            arguments = listOf(navArgument("itemId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val itemId = backStackEntry.arguments?.getString("itemId") ?: ""
+            ItemDetailsScreen(navController, itemId, cardapioVm = cardapioVm, carrinhoVm = carrinhoVm)
+        }
+
+        composable(
+            route = "carrinho",
+        ) {
+            // assume userId will be resolved elsewhere; pass empty for now or fetch current user
+            CarrinhoScreen(navController, usuarioId = "", vm = carrinhoVm)
+        }
+
+        composable(
+            route = "pedidoConfirmado/{pedidoId}",
+            arguments = listOf(navArgument("pedidoId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val pedidoId = backStackEntry.arguments?.getString("pedidoId") ?: ""
+            PedidoConfirmadoScreen(navController, pedidoId)
+        }
+
+        composable("conta") {
+            ContaScreen(navController)
+        }
     }
 }

@@ -11,21 +11,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.edusnack.ui.components.BottomNavBar
 import com.example.edusnack.viewmodel.CardapioViewModel
+import com.example.edusnack.viewmodel.CarrinhoViewModel
 
 @Composable
 fun ItemDetailsScreen(
     nav: NavController,
     itemId: String,
-    vm: CardapioViewModel = viewModel()
+    cardapioVm: CardapioViewModel,
+    carrinhoVm: CarrinhoViewModel
 ) {
-    val itemSelecionado by vm.itemSelecionado.collectAsState()
+    val itemSelecionado by cardapioVm.itemSelecionado.collectAsState()
 
     LaunchedEffect(itemId) {
-        vm.carregarItem(itemId)
+        cardapioVm.carregarItem(itemId)
     }
 
     itemSelecionado?.let { item ->
@@ -40,7 +41,6 @@ fun ItemDetailsScreen(
                     .fillMaxSize()
                     .padding(horizontal = 24.dp)
             ) {
-
                 Spacer(Modifier.height(16.dp))
 
                 Text("Detalhes do Item", style = MaterialTheme.typography.headlineSmall)
@@ -105,7 +105,10 @@ fun ItemDetailsScreen(
                 Spacer(Modifier.height(32.dp))
 
                 Button(
-                    onClick = { nav.navigate("carrinho/add/${item.id}") },
+                    onClick = {
+                        carrinhoVm.adicionar(item)
+                        nav.navigate("carrinho")
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
                     shape = RoundedCornerShape(12.dp)
