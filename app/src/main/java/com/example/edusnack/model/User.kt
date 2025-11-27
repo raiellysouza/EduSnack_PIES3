@@ -4,12 +4,12 @@ data class Usuario(
     val id: String = "",
     val nome: String = "",
     val email: String = "",
-    val tipo: TipoUsuario = TipoUsuario.ALUNO
+    val tipo: TipoUsuario = TipoUsuario.ALUNO,
+    val saldo: Double = 0.0
 )
 
 enum class TipoUsuario {
     ALUNO,
     RESPONSAVEL,
-    NUTRICIONISTA,
-    ESCOLA
+    CANTINA
 }

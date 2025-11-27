@@ -54,6 +54,9 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-messaging")
 
+    //receber imagens
+    implementation("com.google.firebase:firebase-storage")
+
     // AndroidX e Compose
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -65,6 +68,10 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
 
+    //carregamento de imagens
+    implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+
     // Testes
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -73,4 +80,6 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+
 }

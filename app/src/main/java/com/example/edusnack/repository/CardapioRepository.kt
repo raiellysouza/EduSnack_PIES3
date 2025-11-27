@@ -1,9 +1,7 @@
 package com.example.edusnack.repository
 
-import com.example.edusnack.model.Cardapio
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.QuerySnapshot
 import kotlinx.coroutines.tasks.await
 import java.util.*
 
@@ -11,7 +9,7 @@ class CardapioRepository {
 
     private val collection = FirebaseFirestore.getInstance().collection("cardapios")
 
-    suspend fun adicionarCardapio(cardapio: Cardapio): Result<String> {
+    suspend fun adicionarCardapio(cardapio: `Cardapio.kt`): Result<String> {
         cardapio.validarOuErro()?.let {
             return Result.failure(IllegalArgumentException(it))
         }
@@ -24,7 +22,7 @@ class CardapioRepository {
         }
     }
 
-    suspend fun editarCardapio(cardapio: Cardapio): Result<Unit> {
+    suspend fun editarCardapio(cardapio: `Cardapio.kt`): Result<Unit> {
         cardapio.validarOuErro()?.let {
             return Result.failure(IllegalArgumentException(it))
         }
@@ -42,31 +40,31 @@ class CardapioRepository {
     }
 
     // Essa função só funciona se o Timestamp for exato
-    suspend fun listarCardapiosPorData(data: Timestamp): Result<List<Cardapio>> {
+    suspend fun listarCardapiosPorData(data: Timestamp): Result<List<`Cardapio.kt`>> {
         return try {
             val snapshot = collection
                 .whereEqualTo("data", data)
                 .get()
                 .await()
-            Result.success(snapshot.toObjects(Cardapio::class.java))
+            Result.success(snapshot.toObjects(`Cardapio.kt`::class.java))
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    suspend fun listarTodosCardapios(): Result<List<Cardapio>> {
+    suspend fun listarTodosCardapios(): Result<List<`Cardapio.kt`>> {
         return try {
             val snapshot = collection.get().await()
-            Result.success(snapshot.toObjects(Cardapio::class.java))
+            Result.success(snapshot.toObjects(`Cardapio.kt`::class.java))
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    suspend fun buscarCardapioPorId(id: String): Result<Cardapio> {
+    suspend fun buscarCardapioPorId(id: String): Result<`Cardapio.kt`> {
         return try {
             val doc = collection.document(id).get().await()
-            doc.toObject(Cardapio::class.java)?.let {
+            doc.toObject(`Cardapio.kt`::class.java)?.let {
                 Result.success(it)
             } ?: Result.failure(NoSuchElementException("Cardápio não encontrado"))
         } catch (e: Exception) {
