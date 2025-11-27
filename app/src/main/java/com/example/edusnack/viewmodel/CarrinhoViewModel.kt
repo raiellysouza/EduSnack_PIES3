@@ -20,47 +20,29 @@ class CarrinhoViewModel(
     fun adicionar(item: Cardapio) {
         val copia = _itens.value.toMutableList()
         val existente = copia.find { it.item.id == item.id }
-
-        if (existente != null) {
-            existente.quantidade++
-        } else {
-            copia.add(CarrinhoItem(item))
-        }
-
+        if (existente != null) existente.quantidade++ else copia.add(CarrinhoItem(item))
         _itens.value = copia
     }
 
     fun remover(item: Cardapio) {
         val copia = _itens.value.toMutableList()
         val existente = copia.find { it.item.id == item.id }
-
         if (existente != null) {
             existente.quantidade--
             if (existente.quantidade <= 0) copia.remove(existente)
         }
-
         _itens.value = copia
     }
 
-    fun total(): Double {
-        return _itens.value.sumOf { it.subtotal() }
-    }
+    fun total(): Double = _itens.value.sumOf { it.subtotal() }
 
-    fun limparCarrinho() {
-        _itens.value = emptyList()
-    }
+    fun limparCarrinho() { _itens.value = emptyList() }
 
     fun finalizarCompra(usuarioId: String, callback: (String?) -> Unit) {
         viewModelScope.launch {
-            val pedido = Pedido(
-                usuarioId = usuarioId,
-                itens = _itens.value,
-                valorTotal = total()
-            )
-
+            val pedido = Pedido(usuarioId = usuarioId, itens = _itens.value, valorTotal = total())
             val id = pedidoRepo.salvarPedido(pedido)
             callback(id)
-
             if (id != null) limparCarrinho()
         }
     }

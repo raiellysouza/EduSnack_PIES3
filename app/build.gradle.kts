@@ -28,13 +28,22 @@ android {
         }
     }
 
-    buildFeatures { compose = true }
+    buildFeatures {
+        compose = true
+    }
 
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.3"
     }
 
-    kotlinOptions { jvmTarget = "11" }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+
+    kotlinOptions {
+        jvmTarget = "11"
+    }
 }
 
 dependencies {
@@ -43,6 +52,8 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
+
+    // Imagens (Coil)
     implementation("io.coil-kt:coil-compose:2.6.0")
 
     // Compose
@@ -52,11 +63,12 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.ui.tooling.preview)
 
-    // Navigation
+    // Navigation Compose
     implementation("androidx.navigation:navigation-compose:2.8.0")
 
     // ViewModel Compose
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
+    implementation("androidx.compose.material:material-icons-extended")
 
     // Debug
     debugImplementation(libs.androidx.ui.tooling)

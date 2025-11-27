@@ -1,6 +1,6 @@
 package com.example.edusnack.data
 
-import com.example.edusnack.data.model.User
+import com.example.edusnack.model.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await

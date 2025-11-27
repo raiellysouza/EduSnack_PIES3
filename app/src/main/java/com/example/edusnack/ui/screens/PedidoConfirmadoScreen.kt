@@ -10,43 +10,17 @@ import androidx.navigation.NavController
 import com.example.edusnack.ui.components.BottomNavBar
 
 @Composable
-fun PedidoConfirmadoScreen(
-    nav: NavController,
-    pedidoId: String
-) {
-    Scaffold(
-        bottomBar = { BottomNavBar(nav) }
-    ) { padding ->
-
-        Column(
-            modifier = Modifier
-                .padding(padding)
-                .padding(horizontal = 24.dp)
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-
+fun PedidoConfirmadoScreen(nav: NavController, pedidoId: String) {
+    Scaffold(bottomBar = { BottomNavBar(nav) }) { padding ->
+        Column(modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
             Text("Pedido Confirmado!", style = MaterialTheme.typography.headlineMedium)
-
             Spacer(Modifier.height(16.dp))
-
             Text("Seu pedido foi registrado com sucesso.")
             Text("Código do pedido:")
-
             Spacer(Modifier.height(8.dp))
-
-            Text(
-                pedidoId,
-                style = MaterialTheme.typography.titleLarge
-            )
-
+            Text(pedidoId, style = MaterialTheme.typography.titleLarge)
             Spacer(Modifier.height(32.dp))
-
-            Button(
-                onClick = { nav.navigate("home") },
-                colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.ui.graphics.Color(0xFF4CAF50))
-            ) {
+            Button(onClick = { nav.navigate("home") }, colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.ui.graphics.Color(0xFF4CAF50))) {
                 Text("Voltar ao início")
             }
         }

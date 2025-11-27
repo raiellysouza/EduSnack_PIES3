@@ -9,10 +9,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.edusnack.R
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Feedback
 
 @Composable
 fun BottomNavBar(nav: NavController) {
@@ -23,24 +26,36 @@ fun BottomNavBar(nav: NavController) {
             .padding(vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
-        BottomItem("Menu Diário", R.drawable.ic_calendar) {
+        BottomItem("Menu Diário", Icons.Filled.CalendarToday) {
             nav.navigate("home")
         }
-        BottomItem("Antecipar", R.drawable.ic_clock) {}
-        BottomItem("Conta", R.drawable.ic_user) {
-            nav.navigate("conta")
+
+        BottomItem("Antecipar", Icons.Filled.AccessTime) {
+            // futura funcionalidade
         }
-        BottomItem("Feedback", R.drawable.ic_feedback) {}
+
+        BottomItem("Conta", Icons.Filled.Person) {
+            // futura funcionalidade
+        }
+
+        BottomItem("Feedback", Icons.Filled.Feedback) {
+            // futura funcionalidade
+        }
     }
 }
 
 @Composable
-fun BottomItem(text: String, icon: Int, onClick: () -> Unit) {
+private fun BottomItem(
+    label: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    onClick: () -> Unit
+) {
     Column(
         modifier = Modifier.clickable { onClick() },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Icon(painterResource(icon), contentDescription = null)
-        Text(text)
+        Icon(icon, contentDescription = label)
+        Spacer(Modifier.height(4.dp))
+        Text(label)
     }
 }
