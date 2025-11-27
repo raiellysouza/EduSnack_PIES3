@@ -4,11 +4,13 @@ import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentId
 
 data class Pedido(
-    @DocumentId
-    var id: String = "",
-    var usuarioId: String = "",
-    var itens: List<CarrinhoItem> = emptyList(),
-    var valorTotal: Double = 0.0,
-    var status: String = "PENDENTE",
-    var criadoEm: Timestamp = Timestamp.now()
+    @DocumentId val id: String = "",
+    val alunoId: String = "",
+    val alunoNome: String = "",
+    val turma: String = "",
+    val itens: List<ItemPedido> = emptyList(),
+    val data: Timestamp = Timestamp.now(),
+    var status: StatusPedido = StatusPedido.PENDENTE,
+    val total: Double = 0.0,
+    val codigoRetirada: String = ""
 )
