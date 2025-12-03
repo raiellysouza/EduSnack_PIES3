@@ -31,7 +31,7 @@ fun BottomNavBar(nav: NavController) {
         }
 
         BottomItem("Antecipar", Icons.Filled.AccessTime) {
-            // futura funcionalidade
+            nav.navigate("advanceOrder")
         }
 
         BottomItem("Conta", Icons.Filled.Person) {
