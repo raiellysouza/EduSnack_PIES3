@@ -7,11 +7,11 @@ plugins {
 
 android {
     namespace = "com.example.edusnack"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.edusnack"
-        minSdk = 24
+        minSdk = 33
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -75,4 +75,5 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    implementation("androidx.compose.material:material-icons-extended:1.6.7")
 }

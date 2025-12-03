@@ -27,7 +27,7 @@ fun BottomNavBar(nav: NavController) {
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         BottomItem("Menu Diário", Icons.Filled.CalendarToday) {
-            nav.navigate("home")
+            nav.navigate("dailyMenu")
         }
 
         BottomItem("Antecipar", Icons.Filled.AccessTime) {
