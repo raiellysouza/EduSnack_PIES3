@@ -33,7 +33,9 @@ fun AppNavGraph(start: String = "welcome") {
 
         composable("detalhes/{itemId}", arguments = listOf(navArgument("itemId"){ type = NavType.StringType })) { back ->
             val itemId = back.arguments?.getString("itemId") ?: ""
-            ItemDetailsScreen(navController, itemId = itemId, cardapioVm = cardapioVm, carrinhoVm = carrinhoVm)
+//            ItemDetailsScreen(navController, itemId = itemId, cardapioVm = cardapioVm, carrinhoVm = carrinhoVm)
+            ItemDetailsScreen(navController, itemId = itemId)
+
         }
 
         composable("carrinho") { CarrinhoScreen(navController, usuarioId = "", vm = carrinhoVm) }
