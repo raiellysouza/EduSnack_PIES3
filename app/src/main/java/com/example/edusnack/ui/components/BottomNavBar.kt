@@ -35,7 +35,7 @@ fun BottomNavBar(nav: NavController) {
         }
 
         BottomItem("Conta", Icons.Filled.Person) {
-            // futura funcionalidade
+            nav.navigate("studentAccount")
         }
 
         BottomItem("Feedback", Icons.Filled.Feedback) {
