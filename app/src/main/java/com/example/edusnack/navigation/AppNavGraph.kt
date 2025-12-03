@@ -38,6 +38,19 @@ fun AppNavGraph(start: String = "welcome") {
 
         }
 
+        composable(
+            route = "orderConfirmation/{itemName}/{itemPrice}", // Rota com parâmetros
+            arguments = listOf(
+                navArgument("itemName") { type = NavType.StringType },
+                navArgument("itemPrice") { type = NavType.FloatType } // Float para simplificar na URL
+            )
+        ) { backStackEntry ->
+            val name = backStackEntry.arguments?.getString("itemName") ?: "Item"
+            val price = backStackEntry.arguments?.getFloat("itemPrice")?.toDouble() ?: 0.0
+
+            OrderConfirmationScreen(navController, itemName = name, itemPrice = price)
+        }
+
         composable("carrinho") { CarrinhoScreen(navController, usuarioId = "", vm = carrinhoVm) }
 
         composable("pedidoConfirmado/{pedidoId}", arguments = listOf(navArgument("pedidoId"){ type = NavType.StringType })) { back ->

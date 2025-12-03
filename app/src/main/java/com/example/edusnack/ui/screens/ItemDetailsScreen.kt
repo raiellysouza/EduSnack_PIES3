@@ -168,7 +168,13 @@ fun ItemDetailsScreen(nav: NavController, itemId: String) {
 
             // 6. Botão "Adicionar ao Carrinho"
             Button(
-                onClick = { /* Ação de adicionar */ },
+                onClick = {
+                    val nomeDoItem = "Sanduíche de Frango"
+                    val precoDoItem = 12.50f // Use float para passar na navegação
+
+                    // Navega passando os argumentos
+                    nav.navigate("orderConfirmation/$nomeDoItem/$precoDoItem")
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
@@ -179,7 +185,7 @@ fun ItemDetailsScreen(nav: NavController, itemId: String) {
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
             ) {
                 Text(
-                    text = "Adicionar ao Carrinho",
+                    text = "Comprar",
                     color = Color.Black,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp
