@@ -38,8 +38,8 @@ fun BottomNavBar(nav: NavController) {
             nav.navigate("studentAccount")
         }
 
-        BottomItem("Feedback", Icons.Filled.Feedback) {
-            // futura funcionalidade
+        BottomItem("Informações", Icons.Filled.Feedback) {
+            nav.navigate("canteenInfo")
         }
     }
 }
