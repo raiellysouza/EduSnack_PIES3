@@ -57,5 +57,11 @@ fun AppNavGraph(start: String = "welcome") {
             val pedidoId = back.arguments?.getString("pedidoId") ?: ""
             PedidoConfirmadoScreen(navController, pedidoId)
         }
+
+
+
+
+//        Rota dos pais
+        composable("myDependents") {MyDependentsScreen((navController))}
     }
 }

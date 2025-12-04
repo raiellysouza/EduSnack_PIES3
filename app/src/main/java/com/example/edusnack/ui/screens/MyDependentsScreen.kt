@@ -137,7 +137,6 @@ fun DependentItem(dependent: Dependent) {
     }
 }
 
-// Componente para a opção "Adicionar Fundos"
 @Composable
 fun AddFundsOption(onClick: () -> Unit) {
     Row(
