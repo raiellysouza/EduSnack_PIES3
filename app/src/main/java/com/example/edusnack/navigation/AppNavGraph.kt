@@ -64,5 +64,6 @@ fun AppNavGraph(start: String = "welcome") {
 //        Rota dos pais
         composable("myDependents") {MyDependentsScreen((navController))}
         composable("addCredit") {AddCreditScreen(navController)}
+        composable("purchaseStatement") { PurchaseStatementScreen(navController) }
     }
 }
