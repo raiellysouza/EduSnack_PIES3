@@ -7,9 +7,22 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.edusnack.ui.screens.*
+import com.example.edusnack.ui.screens.AdvanceOrderScreen
+import com.example.edusnack.ui.screens.CanteenDashboardScreen
+import com.example.edusnack.ui.screens.CanteenInfoScreen
+import com.example.edusnack.ui.screens.CarrinhoScreen
+import com.example.edusnack.ui.screens.DailyMenuScreen
+import com.example.edusnack.ui.screens.ForgotPasswordScreen
+import com.example.edusnack.ui.screens.HomeScreen
+import com.example.edusnack.ui.screens.ItemDetailsScreen
+import com.example.edusnack.ui.screens.LoginScreen
+import com.example.edusnack.ui.screens.PedidoConfirmadoScreen
+import com.example.edusnack.ui.screens.RegisterScreen
+import com.example.edusnack.ui.screens.StudentAccountScreen
+import com.example.edusnack.ui.screens.WelcomeScreen
 import com.example.edusnack.viewmodel.CardapioViewModel
 import com.example.edusnack.viewmodel.CarrinhoViewModel
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun AppNavGraph(start: String = "welcome") {
@@ -18,43 +31,39 @@ fun AppNavGraph(start: String = "welcome") {
     val carrinhoVm: CarrinhoViewModel = viewModel()
 
     NavHost(navController = navController, startDestination = start) {
+
         composable("welcome") { WelcomeScreen(navController) }
         composable("login") { LoginScreen(navController) }
         composable("register") { RegisterScreen(navController) }
         composable("forgot") { ForgotPasswordScreen(navController) }
 
-        composable("homeAluno") { HomeScreen(navController, cardapioVm = cardapioVm, carrinhoVm = carrinhoVm) }
+        composable("homeAluno") { HomeScreen(navController, cardapioVm, carrinhoVm) }
 
-        composable("dailyMenu") { DailyMenuScreen(navController)  }
-        composable("advanceOrder") { AdvanceOrderScreen(navController)  }
+        composable("homeCantina") { CanteenDashboardScreen(navController) }
+
+        composable("dailyMenu") { DailyMenuScreen(navController) }
+        composable("advanceOrder") { AdvanceOrderScreen(navController) }
         composable("studentAccount") { StudentAccountScreen(navController) }
         composable("canteenInfo") { CanteenInfoScreen(navController) }
 
-
-        composable("detalhes/{itemId}", arguments = listOf(navArgument("itemId"){ type = NavType.StringType })) { back ->
-            val itemId = back.arguments?.getString("itemId") ?: ""
-//            ItemDetailsScreen(navController, itemId = itemId, cardapioVm = cardapioVm, carrinhoVm = carrinhoVm)
+        composable(
+            route = "detalhes/{itemId}",
+            arguments = listOf(navArgument("itemId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val itemId = backStackEntry.arguments?.getString("itemId") ?: ""
             ItemDetailsScreen(navController, itemId = itemId)
+        }
 
+        composable("carrinho") { 
+            val usuarioId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+            CarrinhoScreen(navController, usuarioId, carrinhoVm) 
         }
 
         composable(
-            route = "orderConfirmation/{itemName}/{itemPrice}", // Rota com parâmetros
-            arguments = listOf(
-                navArgument("itemName") { type = NavType.StringType },
-                navArgument("itemPrice") { type = NavType.FloatType } // Float para simplificar na URL
-            )
+            route = "pedidoConfirmado/{pedidoId}",
+            arguments = listOf(navArgument("pedidoId") { type = NavType.StringType })
         ) { backStackEntry ->
-            val name = backStackEntry.arguments?.getString("itemName") ?: "Item"
-            val price = backStackEntry.arguments?.getFloat("itemPrice")?.toDouble() ?: 0.0
-
-            OrderConfirmationScreen(navController, itemName = name, itemPrice = price)
-        }
-
-        composable("carrinho") { CarrinhoScreen(navController, usuarioId = "", vm = carrinhoVm) }
-
-        composable("pedidoConfirmado/{pedidoId}", arguments = listOf(navArgument("pedidoId"){ type = NavType.StringType })) { back ->
-            val pedidoId = back.arguments?.getString("pedidoId") ?: ""
+            val pedidoId = backStackEntry.arguments?.getString("pedidoId") ?: ""
             PedidoConfirmadoScreen(navController, pedidoId)
         }
     }
