@@ -65,5 +65,6 @@ fun AppNavGraph(start: String = "welcome") {
         composable("myDependents") {MyDependentsScreen((navController))}
         composable("addCredit") {AddCreditScreen(navController)}
         composable("purchaseStatement") { PurchaseStatementScreen(navController) }
+        composable("parentAccount") { ParentAccountScreen(navController) }
     }
 }
