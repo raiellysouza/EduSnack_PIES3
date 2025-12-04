@@ -194,7 +194,10 @@ fun AddCreditScreen(nav: NavController) {
 
             // --- 4. BOTÃO CONFIRMAR ---
             Button(
-                onClick = { /* Lógica de confirmar pagamento */ },
+                onClick = {
+                    // Navega para a tela de sucesso criada acima
+                    nav.navigate("rechargeSuccess")
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -205,7 +208,7 @@ fun AddCreditScreen(nav: NavController) {
             ) {
                 Text(
                     text = "Confirmar Adicionar Crédito",
-                    color = Color.Black,
+                    color = Color.Black, // Texto preto conforme contraste
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
