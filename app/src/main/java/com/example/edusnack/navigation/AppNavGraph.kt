@@ -23,6 +23,19 @@ fun AppNavGraph(start: String = "welcome") {
         composable("register") { RegisterScreen(navController) }
         composable("forgot") { ForgotPasswordScreen(navController) }
 
+        // New data registration screen with tipo argument
+        composable(
+            route = "register_data/{tipo}",
+            arguments = listOf(navArgument("tipo") { type = NavType.StringType })
+        ) { back ->
+            val tipo = back.arguments?.getString("tipo") ?: "aluno"
+            DataRegistrationScreen(navController, tipo)
+        }
+
+        // Settings routes
+        composable("settings") { SettingsScreen(navController) }
+        composable("canteen_settings") { SettingsScreen(navController) }
+
         composable("homeAluno") { HomeScreen(navController, cardapioVm = cardapioVm, carrinhoVm = carrinhoVm) }
         composable("homeCantina") { CanteenDashboardScreen(navController) }
         composable("create_menu") { CreateMenuScreen(navController) }
@@ -33,7 +46,7 @@ fun AppNavGraph(start: String = "welcome") {
         composable("advanceOrder") { AdvanceOrderScreen(navController)  }
         composable("studentAccount") { StudentAccountScreen(navController) }
         composable("canteenInfo") { CanteenInfoScreen(navController) }
-
+        composable("canteen_profile") { CanteenProfileScreen(navController) }
 
         composable("detalhes/{itemId}", arguments = listOf(navArgument("itemId"){ type = NavType.StringType })) { back ->
             val itemId = back.arguments?.getString("itemId") ?: ""
