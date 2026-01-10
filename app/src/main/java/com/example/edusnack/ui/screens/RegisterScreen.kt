@@ -224,8 +224,8 @@ fun DataRegistrationScreen(nav: NavController, tipo: String, vm: AuthViewModel =
                 // Display tags
                 if (foodRestrictions.isNotEmpty()) {
                     FlowRow(
-                        mainAxisSpacing = 8.dp,
-                        crossAxisSpacing = 8.dp,
+//                        mainAxisSpacing = 8.dp,
+//                        crossAxisSpacing = 8.dp,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         foodRestrictions.forEachIndexed { index, tag ->
