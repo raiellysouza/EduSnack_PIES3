@@ -10,9 +10,9 @@
               <option name="connection">
                 <ConnectionSetting>
                   <option name="appId" value="com.example.edusnack" />
-                  <option name="mobileSdkAppId" value="1:448521346549:android:f0d694bff5007e1e06d4bc" />
-                  <option name="projectId" value="edusnack-1e88c" />
-                  <option name="projectNumber" value="448521346549" />
+                  <option name="mobileSdkAppId" value="1:658870525062:android:0c555d16ee6181c4ba8507" />
+                  <option name="projectId" value="edusnackv2" />
+                  <option name="projectNumber" value="658870525062" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />
