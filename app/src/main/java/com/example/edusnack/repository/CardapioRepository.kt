@@ -23,4 +23,16 @@ class CardapioRepository(
             null
         }
     }
+
+    suspend fun adicionar(item: Cardapio): String? {
+        return try {
+            val doc = db.collection("cardapio").document()
+            val comId = item.copy(id = doc.id)
+            doc.set(comId).await()
+            doc.id
+        } catch (e: Exception) {
+            null
+        }
+    }
+
 }

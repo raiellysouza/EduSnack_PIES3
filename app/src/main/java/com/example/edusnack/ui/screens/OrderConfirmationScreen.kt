@@ -3,6 +3,7 @@ package com.example.edusnack.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -37,7 +38,7 @@ fun OrderConfirmationScreen(
                     .padding(16.dp)
             ) {
                 IconButton(
-                    onClick = { nav.popBackStack() }, // Volta para a tela anterior
+                    onClick = { nav.popBackStack() },
                     modifier = Modifier.align(Alignment.CenterStart)
                 ) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
@@ -62,7 +63,6 @@ fun OrderConfirmationScreen(
         ) {
             Spacer(modifier = Modifier.height(24.dp))
 
-            // --- CABEÇALHO DO PEDIDO ---
             Text(
                 text = "Pedido #123456789",
                 fontSize = 22.sp,
@@ -79,7 +79,6 @@ fun OrderConfirmationScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // --- RESUMO DO PEDIDO (Apenas 1 item) ---
             Text(
                 text = "Resumo do Pedido",
                 fontSize = 18.sp,
@@ -87,7 +86,6 @@ fun OrderConfirmationScreen(
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            // Linha do Item
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -95,7 +93,7 @@ fun OrderConfirmationScreen(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(text = itemName, fontSize = 16.sp, color = Color.Black)
-                    Text(text = "1x", fontSize = 14.sp, color = Color(0xFF4CAF50)) // "1x" Verde
+                    Text(text = "1x", fontSize = 14.sp, color = Color(0xFF4CAF50))
                 }
                 Text(
                     text = "R$ %.2f".format(itemPrice).replace('.', ','),
@@ -106,7 +104,6 @@ fun OrderConfirmationScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Linha do Total
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -122,7 +119,6 @@ fun OrderConfirmationScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // --- DETALHES DA RETIRADA ---
             Text(
                 text = "Detalhes da Retirada",
                 fontSize = 18.sp,
@@ -130,7 +126,6 @@ fun OrderConfirmationScreen(
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            // Bloco de Horário
             PickupDetailRow(
                 title = "Horário",
                 value = "12:30 - 13:00",
@@ -139,7 +134,6 @@ fun OrderConfirmationScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Bloco de Local
             PickupDetailRow(
                 title = "Local",
                 value = "Cafeteria da Escola",
@@ -147,17 +141,47 @@ fun OrderConfirmationScreen(
             )
 
             Spacer(modifier = Modifier.height(32.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                OutlinedButton(
+                    onClick = { nav.navigate("dailyMenu") },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(60.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
+                ) {
+                    Text("Escolher mais opções")
+                }
+
+                Button(
+                    onClick = { nav.navigate("addCredit") },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(60.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
+                    shape = RoundedCornerShape(12.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
+                ) {
+                    Text("Ir para pagamento", color = Color.Black, fontWeight = FontWeight.Bold)
+                }
+            }
+
+
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
 
-// Componente auxiliar para as linhas de retirada (Horário/Local) com ícone à direita
 @Composable
 fun PickupDetailRow(title: String, value: String, icon: ImageVector) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFFF9F9F9), androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
+            .background(Color(0xFFF9F9F9), RoundedCornerShape(8.dp))
             .padding(16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
@@ -165,7 +189,7 @@ fun PickupDetailRow(title: String, value: String, icon: ImageVector) {
         Column {
             Text(text = title, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Black)
             Spacer(modifier = Modifier.height(4.dp))
-            Text(text = value, fontSize = 14.sp, color = Color(0xFF4CAF50)) // Verde
+            Text(text = value, fontSize = 14.sp, color = Color(0xFF4CAF50))
         }
         Icon(imageVector = icon, contentDescription = null, tint = Color.Black)
     }
@@ -174,5 +198,9 @@ fun PickupDetailRow(title: String, value: String, icon: ImageVector) {
 @Preview
 @Composable
 fun OrderConfirmationPreview() {
-    OrderConfirmationScreen(nav = rememberNavController(), itemName = "Sanduíche de Queijo", itemPrice = 8.00)
+    OrderConfirmationScreen(
+        nav = rememberNavController(),
+        itemName = "Sanduíche de Queijo",
+        itemPrice = 8.00
+    )
 }

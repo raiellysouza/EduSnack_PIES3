@@ -36,24 +36,28 @@ fun AppNavGraph(start: String = "welcome") {
         composable("settings") { SettingsScreen(navController) }
         composable("canteen_settings") { SettingsScreen(navController) }
 
-        composable("homeAluno") { HomeScreen(navController, cardapioVm = cardapioVm, carrinhoVm = carrinhoVm) }
+        composable("homeAluno") { DailyMenuScreen(navController, vm = cardapioVm) }
         composable("homeCantina") { CanteenDashboardScreen(navController) }
-        composable("create_menu") { CreateMenuScreen(navController) }
         composable("view_orders") { ViewOrdersScreen(navController) }
-        composable("manage_menu") { ManageMenuScreen(navController) }
+        composable("manage_menu") { ManageMenuScreen(navController, vm = cardapioVm) }
+        composable("create_menu") { CreateMenuScreen(navController, vm = cardapioVm) }
+        composable("dailyMenu") { DailyMenuScreen(navController, vm = cardapioVm) }
 
-        composable("dailyMenu") { DailyMenuScreen(navController)  }
-        composable("advanceOrder") { AdvanceOrderScreen(navController)  }
+
+        composable("advanceOrder") { AdvanceOrderScreen(navController, vm = cardapioVm)  }
         composable("studentAccount") { StudentAccountScreen(navController) }
         composable("canteenInfo") { CanteenInfoScreen(navController) }
         composable("canteen_profile") { CanteenProfileScreen(navController) }
 
-        composable("detalhes/{itemId}", arguments = listOf(navArgument("itemId"){ type = NavType.StringType })) { back ->
+        composable(
+            "detalhes/{itemId}",
+            arguments = listOf(navArgument("itemId") { type = NavType.StringType })
+        ) { back ->
             val itemId = back.arguments?.getString("itemId") ?: ""
-//            ItemDetailsScreen(navController, itemId = itemId, cardapioVm = cardapioVm, carrinhoVm = carrinhoVm)
-            ItemDetailsScreen(navController, itemId = itemId)
-
+            ItemDetailsScreen(nav = navController, itemId = itemId, cardapioVm = cardapioVm)
         }
+
+
 
         composable(
             route = "orderConfirmation/{itemName}/{itemPrice}", // Rota com parâmetros

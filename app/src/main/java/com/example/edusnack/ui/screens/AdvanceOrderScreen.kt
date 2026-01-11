@@ -10,6 +10,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -19,14 +21,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.example.edusnack.ui.components.BottomNavBar
 import com.example.edusnack.ui.components.HighlightItemCard
+import com.example.edusnack.viewmodel.CardapioViewModel
 
 @Composable
-fun AdvanceOrderScreen(nav: NavController) {
+fun AdvanceOrderScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
+    val itens by vm.itens.collectAsState()
+
     Scaffold(
         topBar = {
             Box(
@@ -84,57 +90,18 @@ fun AdvanceOrderScreen(nav: NavController) {
                 )
             }
 
-            // ITEM 1: Salada Caesar
-            item {
-                // Envolvemos o card em um Box clicável
+            items(itens) { item ->
                 Box(
                     modifier = Modifier.clickable {
-                        // Navega para a tela de detalhes (use o ID se configurou rota dinâmica)
-                        nav.navigate("detalhes/1")
+                        nav.navigate("detalhes/${item.id}")
                     }
                 ) {
                     HighlightItemCard(
-                        tag = "Popular",
-                        title = "Salada Caesar de Frango",
-                        description = "Alface romana crocante, frango grelhado, queijo parmesão e croutons com molho Caesar.",
-                        price = 8.99,
-                        imageUrl = "https://example.com/caesar.jpg",
-                    )
-                }
-                Spacer(modifier = Modifier.height(24.dp))
-            }
-
-            // ITEM 2: Sanduíche
-            item {
-                Box(
-                    modifier = Modifier.clickable {
-                        nav.navigate("detalhes/2")
-                    }
-                ) {
-                    HighlightItemCard(
-                        tag = "Novo",
-                        title = "Sanduíche de Peru e Suíço",
-                        description = "Peito de peru fatiado, queijo suíço, alface, tomate e maionese no pão integral.",
-                        price = 6.49,
-                        imageUrl = "https://example.com/peru.jpg"
-                    )
-                }
-                Spacer(modifier = Modifier.height(24.dp))
-            }
-
-            // ITEM 3: Massa
-            item {
-                Box(
-                    modifier = Modifier.clickable {
-                        nav.navigate("detalhes/3")
-                    }
-                ) {
-                    HighlightItemCard(
-                        tag = "Vegetariano",
-                        title = "Massa Primavera",
-                        description = "Massa penne com uma mistura de vegetais frescos em um molho leve de alho e ervas.",
-                        price = 7.99,
-                        imageUrl = "https://example.com/massa_primavera.jpg"
+                        tag = if (item.vegano) "Vegano" else "Popular",
+                        title = item.nome,
+                        description = item.descricao,
+                        price = String.format("%.2f", item.preco).replace(".", ","),
+                        imageUrl = item.imagemUrl ?: "",
                     )
                 }
                 Spacer(modifier = Modifier.height(24.dp))

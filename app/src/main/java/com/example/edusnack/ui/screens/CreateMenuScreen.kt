@@ -1,6 +1,5 @@
 package com.example.edusnack.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,20 +15,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.edusnack.model.Cardapio
 import com.example.edusnack.ui.theme.DarkText
 import com.example.edusnack.ui.theme.GreenPrimary
+import com.example.edusnack.viewmodel.CardapioViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreateMenuScreen(nav: NavController) {
+fun CreateMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
     // Estados dos campos
     var nome by remember { mutableStateOf("") }
     var descricao by remember { mutableStateOf("") }
     var preco by remember { mutableStateOf("") }
     var categoria by remember { mutableStateOf("") }
 
-    // Estados de Disponibilidade
+    // Estados de Disponibilidade (por enquanto só texto)
     var datas by remember { mutableStateOf("") }
     var dias by remember { mutableStateOf("") }
 
@@ -62,7 +64,7 @@ fun CreateMenuScreen(nav: NavController) {
                 )
             )
         },
-        containerColor = Color.White // Garante fundo branco na tela toda
+        containerColor = Color.White
     ) { padding ->
         LazyColumn(
             modifier = Modifier
@@ -72,8 +74,7 @@ fun CreateMenuScreen(nav: NavController) {
         ) {
             item { Spacer(modifier = Modifier.height(16.dp)) }
 
-            // --- CAMPOS DE TEXTO PERSONALIZADOS ---
-
+            // --- CAMPOS DE TEXTO ---
             item {
                 CustomTextField(
                     value = nome,
@@ -90,7 +91,7 @@ fun CreateMenuScreen(nav: NavController) {
                     onValueChange = { descricao = it },
                     label = "Descrição",
                     modifier = Modifier.height(120.dp),
-                    singleLine = false // Permite quebrar linha na descrição
+                    singleLine = false
                 )
             }
 
@@ -101,7 +102,7 @@ fun CreateMenuScreen(nav: NavController) {
                     value = preco,
                     onValueChange = { preco = it },
                     label = "Preço",
-                    keyboardType = KeyboardType.Decimal // Teclado numérico
+                    keyboardType = KeyboardType.Decimal
                 )
             }
 
@@ -126,6 +127,7 @@ fun CreateMenuScreen(nav: NavController) {
                     color = DarkText
                 )
             }
+
             item { Spacer(modifier = Modifier.height(16.dp)) }
 
             item {
@@ -157,6 +159,7 @@ fun CreateMenuScreen(nav: NavController) {
                     color = DarkText
                 )
             }
+
             item { Spacer(modifier = Modifier.height(16.dp)) }
 
             item {
@@ -169,6 +172,7 @@ fun CreateMenuScreen(nav: NavController) {
                     Text("Contém lactose", color = DarkText)
                 }
             }
+
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(
@@ -179,6 +183,7 @@ fun CreateMenuScreen(nav: NavController) {
                     Text("Contém glúten", color = DarkText)
                 }
             }
+
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(
@@ -189,6 +194,7 @@ fun CreateMenuScreen(nav: NavController) {
                     Text("Vegano/Vegetariano", color = DarkText)
                 }
             }
+
             item { Spacer(modifier = Modifier.height(32.dp)) }
 
             // --- BOTÕES ---
@@ -208,7 +214,29 @@ fun CreateMenuScreen(nav: NavController) {
                     Spacer(modifier = Modifier.width(16.dp))
 
                     Button(
-                        onClick = { /* TODO: Salvar item */ },
+                        onClick = {
+                            val precoDouble = preco.trim().replace(",", ".").toDoubleOrNull()
+                            if (nome.isBlank() || precoDouble == null) {
+                                return@Button
+                            }
+
+                            val item = Cardapio(
+                                nome = nome.trim(),
+                                descricao = descricao.trim(),
+                                preco = precoDouble,
+                                categoria = if (categoria.isBlank()) "Lanches" else categoria.trim(),
+                                possuiLactose = contemLactose,
+                                possuiGluten = contemGluten,
+                                vegano = vegano,
+                                vegetariano = vegano,
+                                autorId = "admin"
+                            )
+
+                            vm.salvarItem(
+                                item = item,
+                                onSuccess = { nav.popBackStack() }
+                            )
+                        },
                         modifier = Modifier
                             .weight(1f)
                             .height(50.dp),
@@ -238,15 +266,15 @@ fun CustomTextField(
     TextField(
         value = value,
         onValueChange = onValueChange,
-        placeholder = { Text(label, color = Color(0xFF4CAF50)) }, // Texto verde placeholder
+        placeholder = { Text(label, color = Color(0xFF4CAF50)) },
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp), // Borda arredondada
+        shape = RoundedCornerShape(12.dp),
         singleLine = singleLine,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         colors = TextFieldDefaults.colors(
-            focusedContainerColor = Color(0xFFE9F2E8), // Fundo verde claro
+            focusedContainerColor = Color(0xFFE9F2E8),
             unfocusedContainerColor = Color(0xFFE9F2E8),
-            focusedIndicatorColor = Color.Transparent, // Remove linha de baixo
+            focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent,
             cursorColor = Color(0xFF4CAF50)
         )

@@ -22,14 +22,15 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.example.edusnack.model.Cardapio
 import com.example.edusnack.ui.components.CanteenBottomNavBar
 import com.example.edusnack.ui.theme.DarkText
 import com.example.edusnack.ui.theme.GreenPrimary
+import com.example.edusnack.viewmodel.CardapioViewModel
 
-// Modelo para Itens do Menu (Abas 0 e 1)
-data class MenuItem(val id: Int, val name: String, val price: String, val imageUrl: String)
 
 // Modelo para Itens do Histórico (Aba 2) - Novo!
 data class HistoryItem(
@@ -43,16 +44,8 @@ data class HistoryItem(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ManageMenuScreen(nav: NavController) {
-    // --- MOCK DADOS ---
-    val menuItems = remember {
-        listOf(
-            MenuItem(1, "Sanduíche de frango", "R$ 5,50", "https://example.com/sanduiche.jpg"),
-            MenuItem(2, "Salada de frutas", "R$ 4,00", "https://example.com/salada.jpg"),
-            MenuItem(3, "Suco de laranja", "R$ 3,00", "https://example.com/suco.jpg"),
-            MenuItem(4, "Biscoito integral", "R$ 2,50", "https://example.com/biscoito.jpg")
-        )
-    }
+fun ManageMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
+    val menuItems by vm.itens.collectAsState()
 
     // Mock específico para o Histórico conforme sua imagem
     val historyItems = remember {
@@ -178,7 +171,7 @@ fun ManageMenuScreen(nav: NavController) {
 
 // --- CARD PADRÃO (Para Cardápio) ---
 @Composable
-fun MenuItemRow(item: MenuItem, onEditClick: () -> Unit) {
+fun MenuItemRow(item: Cardapio, onEditClick: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -186,19 +179,22 @@ fun MenuItemRow(item: MenuItem, onEditClick: () -> Unit) {
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
-                modifier = Modifier.size(56.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFFF0F0F0))
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0xFFF0F0F0))
             ) {
                 Image(
-                    painter = rememberAsyncImagePainter(model = item.imageUrl),
-                    contentDescription = item.name,
+                    painter = rememberAsyncImagePainter(model = ""),
+                    contentDescription = item.nome,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
             }
             Spacer(modifier = Modifier.width(16.dp))
             Column {
-                Text(item.name, fontWeight = FontWeight.Medium, fontSize = 16.sp, color = DarkText)
-                Text(item.price, fontSize = 14.sp, color = Color(0xFF4CAF50), fontWeight = FontWeight.Medium)
+                Text(item.nome, fontWeight = FontWeight.Medium, fontSize = 16.sp, color = DarkText)
+                Text("R$ ${item.preco}", fontSize = 14.sp, color = Color(0xFF4CAF50), fontWeight = FontWeight.Medium)
             }
         }
         IconButton(onClick = onEditClick) {
