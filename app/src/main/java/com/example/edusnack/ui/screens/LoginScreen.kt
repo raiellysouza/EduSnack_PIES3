@@ -43,7 +43,7 @@ fun LoginScreen(nav: NavController, vm: AuthViewModel = viewModel()) {
         val destino = when (tipo) {
             "cantina" -> "homeCantina"
             "responsavel" -> "myDependents"
-            else -> "homeAluno"
+            else -> "dailyMenu"
         }
 
         nav.navigate(destino) {
