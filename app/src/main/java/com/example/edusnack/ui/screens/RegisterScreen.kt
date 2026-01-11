@@ -25,6 +25,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.ui.draw.clip
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
@@ -39,7 +40,7 @@ fun RegisterScreen(nav: NavController, vm: AuthViewModel = viewModel()) {
                 title = { Text("Criar Conta", style = MaterialTheme.typography.titleMedium) },
                 navigationIcon = {
                     IconButton(onClick = { nav.popBackStack() }) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Voltar")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
                     }
                 }
             )
@@ -150,7 +151,7 @@ fun DataRegistrationScreen(nav: NavController, tipo: String, vm: AuthViewModel =
                 title = { Text("Dados de cadastro", style = MaterialTheme.typography.titleMedium) },
                 navigationIcon = {
                     IconButton(onClick = { nav.popBackStack() }) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Voltar")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
                     }
                 }
             )
@@ -224,22 +225,19 @@ fun DataRegistrationScreen(nav: NavController, tipo: String, vm: AuthViewModel =
                 // Display tags
                 if (foodRestrictions.isNotEmpty()) {
                     FlowRow(
-//                        mainAxisSpacing = 8.dp,
-//                        crossAxisSpacing = 8.dp,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        foodRestrictions.forEachIndexed { index, tag ->
+                        for (tag in foodRestrictions) {
                             Surface(
                                 shape = RoundedCornerShape(16.dp),
                                 color = Color(0xFFE9F2E8)
                             ) {
-                                Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    Text(tag)
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Icon(Icons.Default.Close, contentDescription = "Remover", modifier = Modifier.clickable {
-                                        foodRestrictions.removeAt(index)
-                                    })
-                                }
+                                Text(
+                                    text = tag,
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                                )
                             }
                         }
                     }

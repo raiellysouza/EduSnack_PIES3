@@ -9,7 +9,7 @@ data class Cardapio(
     var nome: String = "",
     var descricao: String = "",
     var categoria: String = "Lanches",
-    var preco: Double = 0.0,
+    var preco: Double? = 0.0,
     var possuiLactose: Boolean = false,
     var possuiGluten: Boolean = false,
     var vegano: Boolean = false,
@@ -25,7 +25,10 @@ data class Cardapio(
     fun validarOuErro(): String? {
         if (nome.isBlank()) return "Nome não pode estar em branco"
         if (descricao.isBlank()) return "Descrição não pode estar em branco"
-        if (preco <= 0.0) return "Preço deve ser maior que zero"
+
+        val p = preco ?: 0.0
+        if (p <= 0.0) return "Preço deve ser maior que zero"
+
         if (autorId.isBlank()) return "Autor não pode estar em branco"
         return null
     }

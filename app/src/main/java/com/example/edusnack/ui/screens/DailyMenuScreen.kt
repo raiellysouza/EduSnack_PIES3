@@ -16,30 +16,45 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
+import com.example.edusnack.model.Cardapio
 import com.example.edusnack.ui.components.BottomNavBar
+import com.example.edusnack.viewmodel.CardapioViewModel
 
 // Cores extraídas da imagem
 val GreenText = Color(0xFF4CAF50)
-val DarkGreenText = Color(0xFF2E7D32)
 val LightGrayDivider = Color(0xFFEEEEEE)
 
 data class MenuItemData(
+    val id: String,
     val title: String,
     val description: String,
     val price: Double,
     val imageUrl: String,
     val calories: Int,
     val allergens: String,
-    val tag: String? = null // Ex: "Vegetariano"
+    val tag: String? = null
 )
 
 @Composable
-fun DailyMenuScreen(nav: NavController) {
-    // Estado para controlar a aba selecionada (0, 1 ou 2)
-    var selectedTab by remember { mutableIntStateOf(1) } // Começa no "Almoço"
+fun DailyMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
+    var selectedTab by remember { mutableIntStateOf(1) } // começa no Almoço
+    val itens by vm.itens.collectAsState()
+
+    val categoriaSelecionada = when (selectedTab) {
+        0 -> "Café da Manhã"
+        1 -> "Almoço"
+        else -> "Lanches"
+    }
+
+    val filtrados = remember(itens, categoriaSelecionada) {
+        itens
+            .filter { it.ativo }
+            .filter { it.categoria.equals(categoriaSelecionada, ignoreCase = true) }
+    }
 
     Scaffold(
         topBar = {
@@ -49,7 +64,6 @@ fun DailyMenuScreen(nav: NavController) {
                     .background(Color.White)
                     .padding(top = 16.dp)
             ) {
-                // Título Central
                 Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                     Text(
                         text = "Menu Diário",
@@ -60,7 +74,6 @@ fun DailyMenuScreen(nav: NavController) {
                 }
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Tabs Customizadas (Café, Almoço, Lanches)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
@@ -69,24 +82,25 @@ fun DailyMenuScreen(nav: NavController) {
                     MenuTabItem("Almoço", selected = selectedTab == 1) { selectedTab = 1 }
                     MenuTabItem("Lanches", selected = selectedTab == 2) { selectedTab = 2 }
                 }
+
                 HorizontalDivider(color = Color(0xFFF5F5F5), thickness = 2.dp)
             }
         },
         bottomBar = { BottomNavBar(nav) }
     ) { padding ->
+
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(Color.White) // Fundo geral branco
+                .background(Color.White)
                 .padding(horizontal = 24.dp)
         ) {
             item { Spacer(modifier = Modifier.height(24.dp)) }
 
-            // --- SEÇÃO 1: PRATO PRINCIPAL ---
             item {
                 Text(
-                    text = "Prato Principal",
+                    text = categoriaSelecionada,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,
@@ -94,85 +108,80 @@ fun DailyMenuScreen(nav: NavController) {
                 )
             }
 
-            // ITEM 1: Massa Primavera (Clicável)
-            item {
+            // "loading" simples: ainda não veio nada
+            if (itens.isEmpty()) {
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        CircularProgressIndicator()
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text("Carregando menu...", color = GreenText, fontSize = 14.sp)
+                    }
+                }
+                item { Spacer(modifier = Modifier.height(24.dp)) }
+                return@LazyColumn
+            }
+
+            if (filtrados.isEmpty()) {
+                item {
+                    Text(
+                        text = "Nenhum item cadastrado para $categoriaSelecionada.",
+                        color = GreenText,
+                        fontSize = 14.sp
+                    )
+                }
+                item { Spacer(modifier = Modifier.height(24.dp)) }
+                return@LazyColumn
+            }
+
+            items(filtrados.size) { idx ->
+                val item = filtrados[idx]
+                val ui = item.toMenuItemData()
+
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { nav.navigate("detalhes/3") } // Redireciona para o ID 3
+                        .clickable { nav.navigate("detalhes/${ui.id}") }
                 ) {
-                    FullDetailCard(
-                        data = MenuItemData(
-                            title = "Massa Primavera",
-                            description = "Massa fresca com legumes da época em um molho cremoso leve.",
-                            price = 5.99,
-                            imageUrl = "https://example.com/pasta.jpg",
-                            calories = 450,
-                            allergens = "Laticínios, Glúten",
-                            tag = "Vegetariano"
-                        )
-                    )
+                    FullDetailCard(data = ui)
                 }
-                Spacer(modifier = Modifier.height(32.dp))
-            }
 
-            // --- SEÇÃO 2: ACOMPANHAMENTOS ---
-            item {
-                Text(
-                    text = "Acompanhamentos",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-            }
-
-            // ITEM 2: Salada (Clicável)
-            item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { nav.navigate("detalhes/4") } // Redireciona para o ID 4
-                ) {
-                    FullDetailCard(
-                        data = MenuItemData(
-                            title = "Salada de Jardim",
-                            description = "Mix de folhas verdes com tomates cereja, pepinos e um molho vinagrete.",
-                            price = 2.50,
-                            imageUrl = "https://example.com/salad.jpg",
-                            calories = 150,
-                            allergens = "Nenhum"
-                        )
-                    )
-                }
                 Spacer(modifier = Modifier.height(24.dp))
             }
 
-            // ITEM 3: Frutas (Clicável)
-            item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { nav.navigate("detalhes/5") } // Redireciona para o ID 5
-                ) {
-                    FullDetailCard(
-                        data = MenuItemData(
-                            title = "Copo de Frutas",
-                            description = "Uma mistura refrescante de frutas da época.",
-                            price = 1.75,
-                            imageUrl = "https://example.com/fruit.jpg",
-                            calories = 100,
-                            allergens = "Nenhum"
-                        )
-                    )
-                }
-                Spacer(modifier = Modifier.height(24.dp))
-            }
+            item { Spacer(modifier = Modifier.height(24.dp)) }
         }
     }
 }
 
-// --- COMPONENTE DO CARD COMPLETO (Inalterado) ---
+private fun Cardapio.toMenuItemData(): MenuItemData {
+    val allergens = buildList {
+        if (possuiLactose) add("Laticínios")
+        if (possuiGluten) add("Glúten")
+    }.let { if (it.isEmpty()) "Nenhum" else it.joinToString(", ") }
+
+    val tag = when {
+        vegano -> "Vegano"
+        vegetariano -> "Vegetariano"
+        else -> null
+    }
+
+    return MenuItemData(
+        id = id,
+        title = nome,
+        description = descricao,
+        price = preco ?: 0.0,
+        imageUrl = imagemUrl ?: "",
+        calories = calorias ?: 0,
+        allergens = allergens,
+        tag = tag
+    )
+}
+
 @Composable
 fun FullDetailCard(data: MenuItemData) {
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -180,9 +189,7 @@ fun FullDetailCard(data: MenuItemData) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // Coluna de Textos
             Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
-                // Label opcional (Ex: Vegetariano)
                 if (data.tag != null) {
                     Text(
                         text = data.tag,
@@ -193,7 +200,6 @@ fun FullDetailCard(data: MenuItemData) {
                     )
                 }
 
-                // Título
                 Text(
                     text = data.title,
                     fontSize = 16.sp,
@@ -202,44 +208,38 @@ fun FullDetailCard(data: MenuItemData) {
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
 
-                // Descrição em Verde
                 Text(
                     text = data.description,
-                    color = GreenText, // Usando a cor verde específica
+                    color = GreenText,
                     fontSize = 13.sp,
                     lineHeight = 18.sp,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
             }
 
-            // Imagem Arredondada
             AsyncImage(
                 model = data.imageUrl,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .width(100.dp)
-                    .height(70.dp) // Formato mais retangular como na imagem
+                    .height(70.dp)
                     .clip(RoundedCornerShape(8.dp))
                     .background(Color(0xFFE0E0E0))
             )
         }
 
-        // Linha Divisória Fina
         HorizontalDivider(
             modifier = Modifier.padding(vertical = 12.dp),
             thickness = 1.dp,
             color = LightGrayDivider
         )
 
-        // Informações Nutricionais
         Row(modifier = Modifier.fillMaxWidth()) {
-            // Calorias
             Column(modifier = Modifier.weight(0.4f)) {
                 Text("Calorias", color = GreenText, fontSize = 12.sp)
                 Text("${data.calories}", fontWeight = FontWeight.Bold, fontSize = 14.sp)
             }
-            // Alérgenos
             Column(modifier = Modifier.weight(0.6f)) {
                 Text("Alérgenos", color = GreenText, fontSize = 12.sp)
                 Text(data.allergens, fontWeight = FontWeight.Bold, fontSize = 14.sp)
@@ -248,7 +248,6 @@ fun FullDetailCard(data: MenuItemData) {
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Preço
         Column {
             Text("Preço", color = GreenText, fontSize = 12.sp)
             Text(
@@ -261,7 +260,6 @@ fun FullDetailCard(data: MenuItemData) {
     }
 }
 
-// --- COMPONENTE DA ABA (TAB) ---
 @Composable
 fun MenuTabItem(text: String, selected: Boolean, onClick: () -> Unit) {
     Column(
@@ -277,7 +275,7 @@ fun MenuTabItem(text: String, selected: Boolean, onClick: () -> Unit) {
             fontSize = 14.sp,
             modifier = Modifier.padding(bottom = 8.dp)
         )
-        // Linha indicadora da aba selecionada
+
         if (selected) {
             Box(
                 modifier = Modifier
@@ -291,7 +289,6 @@ fun MenuTabItem(text: String, selected: Boolean, onClick: () -> Unit) {
     }
 }
 
-// Preview para ver como ficou
 @Preview(showBackground = true)
 @Composable
 fun DailyMenuPreview() {

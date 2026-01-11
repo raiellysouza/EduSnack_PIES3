@@ -8,32 +8,43 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
+import com.example.edusnack.model.Cardapio
 import com.example.edusnack.ui.components.BottomNavBar
 import com.example.edusnack.viewmodel.CardapioViewModel
-import com.example.edusnack.viewmodel.CarrinhoViewModel
 
-// Cores extraídas da imagem
-val BrightGreenButton = Color(0xFF00E676) // Verde vibrante do botão
-val LabelGreen = Color(0xFF4CAF50) // Verde dos textos pequenos
+// Cores privadas pra não conflitar com outros arquivos
+private val DetailsBrightGreenButton = Color(0xFF00E676)
+private val DetailsLabelGreen = Color(0xFF4CAF50)
 
 @Composable
-fun ItemDetailsScreen(nav: NavController, itemId: String) {
+fun ItemDetailsScreen(
+    nav: NavController,
+    itemId: String,
+    cardapioVm: CardapioViewModel = viewModel()
+) {
+    val item by cardapioVm.itemSelecionado.collectAsState()
+
+    // Busca real quando entra na tela
+    LaunchedEffect(itemId) {
+        if (itemId.isNotBlank()) {
+            cardapioVm.carregarItem(itemId)
+        }
+    }
+
     Scaffold(
         topBar = {
-            // Header
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -61,19 +72,39 @@ fun ItemDetailsScreen(nav: NavController, itemId: String) {
         },
         bottomBar = { BottomNavBar(nav) }
     ) { padding ->
+
+        // Loading / não carregou ainda
+        if (item == null) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .background(Color.White),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                CircularProgressIndicator()
+                Spacer(modifier = Modifier.height(12.dp))
+                Text("Carregando item...", color = DetailsLabelGreen)
+            }
+            return@Scaffold
+        }
+
+        val i = item!!
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .background(Color.White)
-                .verticalScroll(rememberScrollState()) // Permite rolar se a tela for pequena
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp)
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
             AsyncImage(
-                model = "https://placehold.co/600x400/png?text=Sanduiche", // Substitua pela URL real
-                contentDescription = "Sanduíche de Frango",
+                model = i.imagemUrl ?: "https://placehold.co/600x400/png?text=Item",
+                contentDescription = i.nome,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -84,9 +115,8 @@ fun ItemDetailsScreen(nav: NavController, itemId: String) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // 2. Título
             Text(
-                text = "Sanduíche de Frango com Abacate",
+                text = i.nome,
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black,
@@ -95,50 +125,44 @@ fun ItemDetailsScreen(nav: NavController, itemId: String) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 3. Descrição
             Text(
-                text = "Um sanduíche delicioso com frango grelhado, abacate cremoso, alface crocante e tomate fresco, servido em pão integral.",
+                text = i.descricao,
                 fontSize = 14.sp,
                 color = Color.Gray,
                 lineHeight = 20.sp
             )
 
             Spacer(modifier = Modifier.height(24.dp))
-
-            // Linha divisória sutil
             HorizontalDivider(color = Color(0xFFF5F5F5), thickness = 1.dp)
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 4. Detalhes (Preço e Categoria)
             Row(modifier = Modifier.fillMaxWidth()) {
-                // Coluna Preço
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "Preço",
-                        color = LabelGreen,
+                        color = DetailsLabelGreen,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "R$ 12,50",
+                        text = "R$ %.2f".format(i.preco ?: 0.0).replace('.', ','),
                         color = Color.Black,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Medium
                     )
                 }
 
-                // Coluna Categoria
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "Categoria",
-                        color = LabelGreen,
+                        color = DetailsLabelGreen,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Sanduíches",
+                        text = i.categoria,
                         color = Color.Black,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Medium
@@ -150,38 +174,32 @@ fun ItemDetailsScreen(nav: NavController, itemId: String) {
             HorizontalDivider(color = Color(0xFFF5F5F5), thickness = 1.dp)
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 5. Restrições
             Text(
                 text = "Restrições",
-                color = LabelGreen,
+                color = DetailsLabelGreen,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Sem lactose, sem glúten",
+                text = restricoesTexto(i),
                 color = Color.Black,
                 fontSize = 16.sp
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // 6. Botão "Adicionar ao Carrinho"
             Button(
                 onClick = {
-                    val nomeDoItem = "Sanduíche de Frango"
-                    val precoDoItem = 12.50f // Use float para passar na navegação
-
-                    // Navega passando os argumentos
+                    val nomeDoItem = i.nome
+                    val precoDoItem = (i.preco ?: 0.0).toFloat()
                     nav.navigate("orderConfirmation/$nomeDoItem/$precoDoItem")
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
                 shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = BrightGreenButton
-                ),
+                colors = ButtonDefaults.buttonColors(containerColor = DetailsBrightGreenButton),
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
             ) {
                 Text(
@@ -192,14 +210,16 @@ fun ItemDetailsScreen(nav: NavController, itemId: String) {
                 )
             }
 
-            // Espaço extra no final para não colar na barra de navegação
             Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun ItemDetailsPreview() {
-    ItemDetailsScreen(nav = rememberNavController(), itemId = "itemId")
+private fun restricoesTexto(i: Cardapio): String {
+    val list = buildList {
+        if (!i.possuiLactose) add("Sem lactose")
+        if (!i.possuiGluten) add("Sem glúten")
+        if (i.vegano) add("Vegano") else if (i.vegetariano) add("Vegetariano")
+    }
+    return if (list.isEmpty()) "Nenhuma" else list.joinToString(", ")
 }

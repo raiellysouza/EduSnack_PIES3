@@ -33,4 +33,17 @@ class CardapioViewModel(
             _itemSelecionado.value = repo.buscarPorId(id)
         }
     }
+
+    fun salvarItem(item: Cardapio, onSuccess: () -> Unit = {}, onError: (String) -> Unit = {}) {
+        viewModelScope.launch {
+            val id = repo.adicionar(item)
+            if (id != null) {
+                carregarItens()
+                onSuccess()
+            } else {
+                onError("Não foi possível salvar o item.")
+            }
+        }
+    }
+
 }

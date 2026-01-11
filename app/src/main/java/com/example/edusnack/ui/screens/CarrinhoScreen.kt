@@ -14,6 +14,7 @@ import androidx.navigation.NavController
 import com.example.edusnack.ui.components.BottomNavBar
 import com.example.edusnack.viewmodel.CarrinhoViewModel
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
 fun CarrinhoScreen(nav: NavController, usuarioId: String, vm: CarrinhoViewModel) {

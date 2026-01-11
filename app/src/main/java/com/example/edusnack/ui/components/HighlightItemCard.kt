@@ -25,7 +25,7 @@ import coil.compose.AsyncImage
 fun HighlightItemCard(
     title: String,
     description: String,
-    price: Double,
+    price: String,
     imageUrl: String,
     tag: String? = null // Ex: "Popular", "Novo", "Vegetariano"
 ) {
@@ -78,7 +78,7 @@ fun HighlightItemCard(
                 shape = RoundedCornerShape(8.dp)
             ) {
                 Text(
-                    text = "R$ %.2f".format(price).replace('.', ','),
+                    text = "R$ $price",
                     color = Color.Black,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
