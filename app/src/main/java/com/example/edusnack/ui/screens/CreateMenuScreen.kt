@@ -1,22 +1,31 @@
 package com.example.edusnack.ui.screens
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.edusnack.model.Cardapio
 import com.example.edusnack.ui.theme.DarkText
 import com.example.edusnack.ui.theme.GreenPrimary
@@ -31,7 +40,15 @@ fun CreateMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
     var preco by remember { mutableStateOf("") }
     var categoria by remember { mutableStateOf("") }
 
-    // Estados de Disponibilidade (por enquanto só texto)
+    // Estado da Imagem
+    var imagemUri by remember { mutableStateOf<Uri?>(null) }
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        imagemUri = uri
+    }
+
+    // Estados de Disponibilidade
     var datas by remember { mutableStateOf("") }
     var dias by remember { mutableStateOf("") }
 
@@ -73,6 +90,41 @@ fun CreateMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
                 .padding(horizontal = 24.dp)
         ) {
             item { Spacer(modifier = Modifier.height(16.dp)) }
+
+            // --- SELEÇÃO DE IMAGEM ---
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color(0xFFF5F5F5))
+                        .clickable { launcher.launch("image/*") },
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (imagemUri != null) {
+                        AsyncImage(
+                            model = imagemUri,
+                            contentDescription = "Imagem selecionada",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                imageVector = Icons.Default.AddAPhoto,
+                                contentDescription = null,
+                                modifier = Modifier.size(48.dp),
+                                tint = Color.Gray
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text("Adicionar foto do item", color = Color.Gray)
+                        }
+                    }
+                }
+            }
+
+            item { Spacer(modifier = Modifier.height(24.dp)) }
 
             // --- CAMPOS DE TEXTO ---
             item {
@@ -234,6 +286,7 @@ fun CreateMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
 
                             vm.salvarItem(
                                 item = item,
+                                imagemUri = imagemUri,
                                 onSuccess = { nav.popBackStack() }
                             )
                         },
@@ -253,7 +306,6 @@ fun CreateMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
     }
 }
 
-// --- COMPONENTE CUSTOMIZADO PARA OS CAMPOS ---
 @Composable
 fun CustomTextField(
     value: String,
