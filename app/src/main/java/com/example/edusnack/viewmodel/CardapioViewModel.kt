@@ -1,11 +1,13 @@
 package com.example.edusnack.viewmodel
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.edusnack.model.Cardapio
 import com.example.edusnack.repository.CardapioRepository
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -13,6 +15,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.util.UUID
 
 data class HistoryItem(
     val id: String = "",
@@ -98,13 +101,33 @@ class CardapioViewModel(
         }
     }
 
-    fun salvarItem(item: Cardapio, onSuccess: () -> Unit) {
+    suspend fun uploadImagem(uri: Uri): String? {
+        return try {
+            val storageRef = FirebaseStorage.getInstance().reference
+            val fileRef = storageRef.child("cardapio/${UUID.randomUUID()}.jpg")
+            fileRef.putFile(uri).await()
+            fileRef.downloadUrl.await().toString()
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    fun salvarItem(item: Cardapio, imagemUri: Uri?, onSuccess: () -> Unit) {
         viewModelScope.launch {
             _loading.value = true
-            val id = repo.adicionar(item)
+            
+            var itemFinal = item
+            if (imagemUri != null) {
+                val url = uploadImagem(imagemUri)
+                if (url != null) {
+                    itemFinal = item.copy(imagemUrl = url)
+                }
+            }
+
+            val id = repo.adicionar(itemFinal)
             if (id != null) {
                 // Registrar no histórico
-                registrarAcaoHistorico(item, "Adicionado por Admin")
+                registrarAcaoHistorico(itemFinal, "Adicionado por Admin")
                 carregarItens()
                 onSuccess()
             }

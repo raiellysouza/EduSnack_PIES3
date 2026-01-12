@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.example.edusnack.model.Cardapio
 import com.example.edusnack.ui.components.CanteenBottomNavBar
@@ -64,7 +65,6 @@ fun ManageMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // --- ABAS ---
             TabRow(
                 selectedTabIndex = selectedTab,
                 containerColor = Color.White,
@@ -96,15 +96,12 @@ fun ManageMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
                 }
             }
 
-            // --- CONTEÚDO ---
             Box(modifier = Modifier.weight(1f)) {
                 if (loading) {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = GreenPrimary)
                 } else {
-                    // Se for Histórico (Aba 2), mostra o layout novo
                     if (selectedTab == 2) {
                         Column {
-                            // Filtros (Data / Tipo de alteração)
                             Row(modifier = Modifier.padding(16.dp)) {
                                 FilterChip(label = "Data")
                                 Spacer(modifier = Modifier.width(12.dp))
@@ -126,9 +123,7 @@ fun ManageMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
                                 }
                             }
                         }
-                    }
-                    // Se for Cardápio (Aba 0 ou 1), mostra o layout padrão com botão de adicionar
-                    else {
+                    } else {
                         if (menuItems.isEmpty()) {
                             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                                 Text("Nenhum item no cardápio.", color = Color.Gray)
@@ -144,7 +139,6 @@ fun ManageMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
                             }
                         }
 
-                        // Botão Adicionar (Apenas nas abas de cardápio)
                         Button(
                             onClick = { nav.navigate("create_menu") },
                             modifier = Modifier
@@ -166,7 +160,6 @@ fun ManageMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
     }
 }
 
-// --- CARD PADRÃO (Para Cardápio) ---
 @Composable
 fun MenuItemRow(item: Cardapio, onEditClick: () -> Unit) {
     Row(
@@ -181,17 +174,24 @@ fun MenuItemRow(item: Cardapio, onEditClick: () -> Unit) {
                     .clip(RoundedCornerShape(12.dp))
                     .background(Color(0xFFF0F0F0))
             ) {
-                Image(
-                    painter = rememberAsyncImagePainter(model = ""),
-                    contentDescription = item.nome,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
+                // CORREÇÃO: Usando AsyncImage com a URL real do item
+                if (!item.imagemUrl.isNullOrBlank()) {
+                    AsyncImage(
+                        model = item.imagemUrl,
+                        contentDescription = item.nome,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("🍽️", fontSize = 24.sp)
+                    }
+                }
             }
             Spacer(modifier = Modifier.width(16.dp))
             Column {
                 Text(item.nome, fontWeight = FontWeight.Medium, fontSize = 16.sp, color = DarkText)
-                Text("R$ ${item.preco}", fontSize = 14.sp, color = Color(0xFF4CAF50), fontWeight = FontWeight.Medium)
+                Text("R$ ${String.format("%.2f", item.preco ?: 0.0)}", fontSize = 14.sp, color = Color(0xFF4CAF50), fontWeight = FontWeight.Medium)
             }
         }
         IconButton(onClick = onEditClick) {
@@ -200,7 +200,6 @@ fun MenuItemRow(item: Cardapio, onEditClick: () -> Unit) {
     }
 }
 
-// --- CARD DE HISTÓRICO (Para Aba Histórico) ---
 @Composable
 fun HistoryItemRow(item: HistoryItem) {
     Row(
@@ -212,8 +211,8 @@ fun HistoryItemRow(item: HistoryItem) {
             Box(
                 modifier = Modifier.size(64.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFFF0F0F0))
             ) {
-                Image(
-                    painter = rememberAsyncImagePainter(model = item.imageUrl),
+                AsyncImage(
+                    model = item.imageUrl,
                     contentDescription = item.name,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
