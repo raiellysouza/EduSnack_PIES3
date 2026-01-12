@@ -23,6 +23,7 @@ import coil.compose.AsyncImage
 import com.example.edusnack.model.Cardapio
 import com.example.edusnack.ui.components.BottomNavBar
 import com.example.edusnack.viewmodel.CardapioViewModel
+import com.example.edusnack.viewmodel.CarrinhoViewModel
 
 // Cores privadas pra não conflitar com outros arquivos
 private val DetailsBrightGreenButton = Color(0xFF00E676)
@@ -32,7 +33,8 @@ private val DetailsLabelGreen = Color(0xFF4CAF50)
 fun ItemDetailsScreen(
     nav: NavController,
     itemId: String,
-    cardapioVm: CardapioViewModel = viewModel()
+    cardapioVm: CardapioViewModel = viewModel(),
+    carrinhoVm: CarrinhoViewModel
 ) {
     val item by cardapioVm.itemSelecionado.collectAsState()
 
@@ -73,7 +75,6 @@ fun ItemDetailsScreen(
         bottomBar = { BottomNavBar(nav) }
     ) { padding ->
 
-        // Loading / não carregou ainda
         if (item == null) {
             Column(
                 modifier = Modifier
@@ -191,9 +192,8 @@ fun ItemDetailsScreen(
 
             Button(
                 onClick = {
-                    val nomeDoItem = i.nome
-                    val precoDoItem = (i.preco ?: 0.0).toFloat()
-                    nav.navigate("orderConfirmation/$nomeDoItem/$precoDoItem")
+                    carrinhoVm.adicionar(i)
+                    nav.navigate("carrinho")
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -203,7 +203,7 @@ fun ItemDetailsScreen(
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
             ) {
                 Text(
-                    text = "Comprar",
+                    text = "Adicionar ao Carrinho",
                     color = Color.Black,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp

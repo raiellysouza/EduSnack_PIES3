@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
-class OrdersViewModel(
+class PedidoViewModel(
     private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
 ) : ViewModel() {
 
@@ -50,7 +50,6 @@ class OrdersViewModel(
             num == 2 -> "2º Ensino Médio"
             num == 3 -> "3º Ensino Médio"
             t.contains("Ensino Médio", ignoreCase = true) || t.contains("EM", ignoreCase = true) -> {
-                // attempt to detect which year
                 when {
                     t.contains("1", ignoreCase = true) -> "1º Ensino Médio"
                     t.contains("2", ignoreCase = true) -> "2º Ensino Médio"
@@ -84,7 +83,6 @@ class OrdersViewModel(
                     null
                 }
             }.filter { pedido ->
-                // Only show orders that are not delivered
                 pedido.status != StatusPedido.ENTREGUE
             }
 
@@ -100,14 +98,13 @@ class OrdersViewModel(
     fun markAsDelivered(orderId: String) {
         viewModelScope.launch {
             try {
-                db.collection("pedidos").document(orderId).update("status", StatusPedido.ENTREGUE.name).await()
+                db.collection("pedidos")
+                    .document(orderId)
+                    .update("status", StatusPedido.ENTREGUE.name)
+                    .await()
             } catch (e: Exception) {
                 _error.value = e.message
             }
         }
-    }
-
-    override fun onCleared() {
-        super.onCleared()
     }
 }

@@ -1,6 +1,5 @@
 package com.example.edusnack
 
-import com.example.edusnack.model.Dia
 import com.example.edusnack.model.ItemPedido
 import com.example.edusnack.model.Semana
 
@@ -38,7 +37,7 @@ class MontagemDiaRepositoryFake(
         }
 
         dia.itens.add(item.copy())
-        dia.totalDia = dia.itens.sumOf { it.preco * it.quantidade }
+        dia.totalDia = dia.itens.sumOf { it.preco?.times(it.quantidade) ?: 0.0 }
 
         salvarSemana(alunoId, idSemana, semana)
 
@@ -62,7 +61,7 @@ class MontagemDiaRepositoryFake(
         val removeu = dia.itens.removeIf { it.itemId == itemId }
         if (!removeu) throw IllegalStateException("Item não encontrado no dia")
 
-        dia.totalDia = dia.itens.sumOf { it.preco * it.quantidade }
+        dia.totalDia = dia.itens.sumOf { it.preco?.times(it.quantidade) ?: 0.0 }
 
         salvarSemana(alunoId, idSemana, semana)
 
@@ -92,7 +91,7 @@ class MontagemDiaRepositoryFake(
         val antigo = dia.itens[index]
         dia.itens[index] = antigo.copy(quantidade = quantidade)
 
-        dia.totalDia = dia.itens.sumOf { it.preco * it.quantidade }
+        dia.totalDia = dia.itens.sumOf { it.preco?.times(it.quantidade) ?: 0.0 }
 
         salvarSemana(alunoId, idSemana, semana)
 
