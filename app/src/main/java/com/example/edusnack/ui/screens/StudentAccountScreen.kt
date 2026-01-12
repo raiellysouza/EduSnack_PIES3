@@ -9,6 +9,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -18,30 +20,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.example.edusnack.ui.components.BottomNavBar
-
-// Modelo de dados para as transações (Localizado aqui para facilitar a cópia)
-data class Transaction(
-    val title: String,
-    val date: String,
-    val type: String, // Ex: "Compra na Cafeteria"
-    val amount: Double
-)
+import com.example.edusnack.viewmodel.StudentAccountViewModel
+import com.example.edusnack.viewmodel.StudentTransaction
 
 @Composable
-fun StudentAccountScreen(nav: NavController) {
-    // Dados simulados idênticos à imagem enviada
-    val transactions = listOf(
-        Transaction("Almoço", "15/03/24", "Compra na Cafeteria", -7.50),
-        Transaction("Depósito", "10/03/24", "Pagamento Online", 50.00),
-        Transaction("Depósito", "10/03/24", "Pagamento Online", 50.00),
-        Transaction("Depósito", "10/03/24", "Pagamento Online", 50.00),
-        Transaction("Depósito", "10/03/24", "Pagamento Online", 50.00),
-        Transaction("Café da Manhã", "08/03/24", "Compra na Cafeteria", -3.25)
-    )
+fun StudentAccountScreen(nav: NavController, vm: StudentAccountViewModel = viewModel()) {
+    val user by vm.user.collectAsState()
+    val alunoInfo by vm.alunoInfo.collectAsState()
+    val transactions by vm.transactions.collectAsState()
+    val loading by vm.loading.collectAsState()
 
     Scaffold(
         topBar = {
@@ -76,88 +68,109 @@ fun StudentAccountScreen(nav: NavController) {
         },
         bottomBar = { BottomNavBar(nav) }
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .background(Color.White)
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            item {
-                Spacer(modifier = Modifier.height(24.dp))
-
-                AsyncImage(
-                    model = "https://placehold.co/200x200/FFCCBC/ffffff?text=IS", // URL Placeholder
-                    contentDescription = "Foto de perfil",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(120.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFFFFCCBC)) // Cor de fundo caso a imagem demore
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    text = "Isabela Souza",
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
-                )
-
-                Text(
-                    text = "ID do Aluno: 123456",
-                    fontSize = 14.sp,
-                    color = Color(0xFF4CAF50), // Verde do App
-                    fontWeight = FontWeight.Medium
-                )
-
-                Spacer(modifier = Modifier.height(40.dp))
+        if (loading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = Color(0xFF4CAF50))
             }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .background(Color.White)
+                    .padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                item {
+                    Spacer(modifier = Modifier.height(24.dp))
 
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                    horizontalArrangement = Arrangement.Start
-                ) {
+                    AsyncImage(
+                        model = user?.fotoUrl ?: "https://placehold.co/200x200/FFCCBC/ffffff?text=${user?.nome?.take(2) ?: "AL"}",
+                        contentDescription = "Foto de perfil",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(120.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFFFCCBC))
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
                     Text(
-                        text = "Histórico de Transações",
-                        fontSize = 18.sp,
+                        text = user?.nome ?: "Nome não disponível",
+                        fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black
                     )
+
+                    Text(
+                        text = "Saldo: R$ ${String.format("%.2f", alunoInfo?.saldo ?: 0.0)}",
+                        fontSize = 18.sp,
+                        color = Color(0xFF4CAF50),
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+
+                    Text(
+                        text = "Turma: ${alunoInfo?.anoOuTurma ?: "Não informada"}",
+                        fontSize = 14.sp,
+                        color = Color.Gray,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(40.dp))
                 }
-            }
 
-            // --- LISTA DE TRANSAÇÕES ---
-            items(transactions) { transaction ->
-                TransactionItem(transaction)
-                // Linha divisória fina entre itens (opcional, mas ajuda na visualização)
-                HorizontalDivider(
-                    modifier = Modifier.padding(vertical = 12.dp),
-                    thickness = 0.5.dp,
-                    color = Color(0xFFEEEEEE)
-                )
-            }
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                        horizontalArrangement = Arrangement.Start
+                    ) {
+                        Text(
+                            text = "Histórico de Transações",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black
+                        )
+                    }
+                }
 
-            // Espaçamento final para o conteúdo não ficar escondido atrás da BottomBar
-            item { Spacer(modifier = Modifier.height(20.dp)) }
+                if (transactions.isEmpty()) {
+                    item {
+                        Text(
+                            text = "Nenhuma transação encontrada.",
+                            color = Color.Gray,
+                            fontSize = 14.sp,
+                            modifier = Modifier.padding(top = 20.dp)
+                        )
+                    }
+                } else {
+                    items(transactions) { transaction ->
+                        TransactionItem(transaction)
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 12.dp),
+                            thickness = 0.5.dp,
+                            color = Color(0xFFEEEEEE)
+                        )
+                    }
+                }
+
+                item { Spacer(modifier = Modifier.height(20.dp)) }
+            }
         }
     }
 }
 
-// Sub-componente para renderizar cada linha da transação
 @Composable
-fun TransactionItem(transaction: Transaction) {
+fun TransactionItem(transaction: StudentTransaction) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Lado Esquerdo: Título, Data e Tipo
         Column {
             Text(
                 text = "${transaction.title} - ${transaction.date}",
@@ -169,13 +182,11 @@ fun TransactionItem(transaction: Transaction) {
             Text(
                 text = transaction.type,
                 fontSize = 14.sp,
-                color = Color(0xFF4CAF50), // Verde característico
+                color = Color(0xFF4CAF50),
                 fontWeight = FontWeight.Medium
             )
         }
 
-        // Lado Direito: Valor Formatado
-        // Lógica: Se for positivo põe "+", troca ponto por vírgula
         val sign = if (transaction.amount > 0) "+" else ""
         val formattedPrice = "R$%.2f".format(transaction.amount).replace('.', ',')
 
@@ -183,7 +194,7 @@ fun TransactionItem(transaction: Transaction) {
             text = "$sign$formattedPrice",
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.Black
+            color = if (transaction.amount > 0) Color(0xFF4CAF50) else Color.Black
         )
     }
 }

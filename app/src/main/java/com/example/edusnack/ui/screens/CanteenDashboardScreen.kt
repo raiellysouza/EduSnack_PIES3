@@ -19,31 +19,26 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Logout
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.edusnack.ui.components.CanteenBottomNavBar
 import com.example.edusnack.ui.components.SummaryDashboardCard
 import com.example.edusnack.ui.theme.DarkText
 import com.example.edusnack.ui.theme.GrayBackground
 import com.example.edusnack.ui.theme.GreenPrimary
+import com.example.edusnack.viewmodel.CanteenDashboardViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CanteenDashboardScreen(
     nav: NavController,
-    // Data-driven parameters (default to neutral values until ViewModel provides real data)
-    activeMenusCount: Int = 0,
-    pendingOrdersCount: Int = 0,
-    readyOrdersCount: Int = 0,
-    totalSales: Double = 0.0,
-    // Callbacks for actions (keep composable stateless)
-    onCreateMenu: () -> Unit = { nav.navigate("create_menu") },
-    onViewOrders: () -> Unit = { nav.navigate("view_orders") },
-    onSettings: () -> Unit = { nav.navigate("settings") },
-    onNotifications: () -> Unit = { nav.navigate("notifications") },
-    onLogout: () -> Unit = {
-        // Default behaviour: sign out handled elsewhere, navigate to login
-        nav.navigate("login") { popUpTo("welcome") { inclusive = true } }
-    }
+    vm: CanteenDashboardViewModel = viewModel()
 ) {
+    val activeMenusCount by vm.activeMenusCount.collectAsState()
+    val pendingOrdersCount by vm.pendingOrdersCount.collectAsState()
+    val readyOrdersCount by vm.readyOrdersCount.collectAsState()
+    val totalSales by vm.totalSales.collectAsState()
+    val loading by vm.loading.collectAsState()
+
     var overflowExpanded by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -62,7 +57,6 @@ fun CanteenDashboardScreen(
                     containerColor = GrayBackground
                 ),
                 actions = {
-                    // Overflow menu (three-dots)
                     IconButton(onClick = { overflowExpanded = true }) {
                         Icon(imageVector = Icons.Filled.MoreVert, contentDescription = "Mais")
                     }
@@ -75,7 +69,7 @@ fun CanteenDashboardScreen(
                             text = { Text("Configurações") },
                             onClick = {
                                 overflowExpanded = false
-                                onSettings()
+                                nav.navigate("settings")
                             },
                             leadingIcon = { Icon(Icons.Filled.Settings, contentDescription = null) }
                         )
@@ -83,7 +77,7 @@ fun CanteenDashboardScreen(
                             text = { Text("Notificações") },
                             onClick = {
                                 overflowExpanded = false
-                                onNotifications()
+                                nav.navigate("notifications")
                             },
                             leadingIcon = { Icon(Icons.Filled.Notifications, contentDescription = null) }
                         )
@@ -91,7 +85,7 @@ fun CanteenDashboardScreen(
                             text = { Text("Logout") },
                             onClick = {
                                 overflowExpanded = false
-                                onLogout()
+                                nav.navigate("login") { popUpTo("welcome") { inclusive = true } }
                             },
                             leadingIcon = { Icon(Icons.Filled.Logout, contentDescription = null) }
                         )
@@ -99,105 +93,103 @@ fun CanteenDashboardScreen(
                 }
             )
         },
-        // Removed unsupported 'selected' parameter — BottomNav manages its own selection internally
         bottomBar = { CanteenBottomNavBar(nav) }
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 24.dp)
-        ) {
-            // --- Título da Seção Resumo ---
-            item {
-                Text(
-                    text = "Resumo do Dia",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = DarkText,
-                    modifier = Modifier.padding(vertical = 16.dp)
-                )
+        if (loading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = GreenPrimary)
             }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(horizontal = 24.dp)
+            ) {
+                item {
+                    Text(
+                        text = "Resumo do Dia",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = DarkText,
+                        modifier = Modifier.padding(vertical = 16.dp)
+                    )
+                }
 
-            // --- CARDS DE RESUMO ---
-            item {
-                SummaryDashboardCard(
-                    title = "Cardápios ativos hoje",
-                    value = if (activeMenusCount > 0) activeMenusCount.toString() else "0",
-                    description = if (activeMenusCount > 0) "Gerencie os cardápios ativos para hoje" else "Sem dados para hoje",
-                    imageUrl = ""
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-            }
+                item {
+                    SummaryDashboardCard(
+                        title = "Cardápios ativos hoje",
+                        value = activeMenusCount.toString(),
+                        description = if (activeMenusCount > 0) "Gerencie os cardápios ativos para hoje" else "Sem cardápios ativos",
+                        imageUrl = ""
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
 
-            item {
-                SummaryDashboardCard(
-                    title = "Pedidos pendentes",
-                    value = if (pendingOrdersCount > 0) pendingOrdersCount.toString() else "0",
-                    description = if (pendingOrdersCount > 0) "Pedidos aguardando preparo" else "Sem dados para hoje",
-                    imageUrl = ""
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-            }
+                item {
+                    SummaryDashboardCard(
+                        title = "Pedidos pendentes",
+                        value = pendingOrdersCount.toString(),
+                        description = if (pendingOrdersCount > 0) "Pedidos aguardando preparo" else "Nenhum pedido pendente",
+                        imageUrl = ""
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
 
-            item {
-                SummaryDashboardCard(
-                    title = "Pedidos prontos para retirada",
-                    value = if (readyOrdersCount > 0) readyOrdersCount.toString() else "0",
-                    description = if (readyOrdersCount > 0) "Prontos para retirada" else "Sem dados para hoje",
-                    imageUrl = ""
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-            }
+                item {
+                    SummaryDashboardCard(
+                        title = "Pedidos prontos para retirada",
+                        value = readyOrdersCount.toString(),
+                        description = if (readyOrdersCount > 0) "Prontos para retirada" else "Nenhum pedido pronto",
+                        imageUrl = ""
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
 
-            item {
-                SummaryDashboardCard(
-                    title = "Total de vendas do dia",
-                    value = if (totalSales > 0.0) String.format("R$ %.2f", totalSales) else "R$ 0,00",
-                    description = if (totalSales > 0.0) "Vendas totais de hoje" else "Sem dados para hoje",
-                    imageUrl = ""
-                )
-                Spacer(modifier = Modifier.height(32.dp))
-            }
+                item {
+                    SummaryDashboardCard(
+                        title = "Total de vendas do dia",
+                        value = String.format("R$ %.2f", totalSales),
+                        description = "Vendas acumuladas hoje",
+                        imageUrl = ""
+                    )
+                    Spacer(modifier = Modifier.height(32.dp))
+                }
 
-            // --- Título da Seção Ações ---
-            item {
-                Text(
-                    text = "Ações",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = DarkText,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-            }
+                item {
+                    Text(
+                        text = "Ações",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = DarkText,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                }
 
-            // --- PRIMARY ACTION + Secondary ---
-            item {
-                // Primary: Criar cardápio
-                ActionButton(
-                    text = "Criar cardápio",
-                    backgroundColor = GreenPrimary,
-                    textColor = Color.White,
-                    onClick = onCreateMenu
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-            }
+                item {
+                    ActionButton(
+                        text = "Criar cardápio",
+                        backgroundColor = GreenPrimary,
+                        textColor = Color.White,
+                        onClick = { nav.navigate("create_menu") }
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
 
-            item {
-                // Secondary: Ver pedidos
-                ActionButton(
-                    text = "Ver pedidos",
-                    backgroundColor = Color(0xFFE8F5E9),
-                    textColor = DarkText,
-                    onClick = onViewOrders
-                )
-                Spacer(modifier = Modifier.height(24.dp))
+                item {
+                    ActionButton(
+                        text = "Ver pedidos",
+                        backgroundColor = Color(0xFFE8F5E9),
+                        textColor = DarkText,
+                        onClick = { nav.navigate("view_orders") }
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
             }
         }
     }
 }
 
-// Componente local auxiliar para os botões ficarem padronizados
 @Composable
 fun ActionButton(
     text: String,

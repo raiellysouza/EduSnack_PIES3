@@ -12,5 +12,5 @@ data class Aluno(
     var anoOuTurma: String = "",
     var dataNascimento: Timestamp = Timestamp.now(),
     var responsavelId: String = "",
+    var saldo: Double = 0.0
 )
-

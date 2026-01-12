@@ -10,6 +10,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -20,45 +22,26 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.edusnack.model.Aluno
+import com.example.edusnack.model.Pedido
 import com.example.edusnack.ui.components.BottomNavBar
+import com.example.edusnack.ui.theme.GreenPrimary
+import com.example.edusnack.viewmodel.ParentViewModel
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 // --- Cores Base ---
 val LightBackground = Color(0xFFF5F5F5)
 
-// --- Modelos de Dados (Contexto do Responsável) ---
-
-// Representa o filho/dependente na visão do pai
-data class ChildDependentItem(
-    val name: String,
-    val details: String, // Ex: "Turma: 8A | Saldo: R$ 25,00"
-    val placeholderIcon: ImageVector = Icons.Default.Person
-)
-
-// Transação resumida para o histórico
-data class TransactionSummary(
-    val title: String,
-    val studentName: String,
-    val date: String,
-    val price: String
-)
-
 @Composable
-fun ParentAccountScreen(nav: NavController) {
-    // Dados Mockados: Lista de filhos associados a este pai
-    val childrenList = listOf(
-        ChildDependentItem("Lucas Silva", "Turma: 8A | Saldo: R$ 25,00"),
-        ChildDependentItem("Sofia Silva", "Turma: 6B | Saldo: R$ 18,50")
-    )
-
-    // Dados Mockados: Última transação realizada por um dos dependentes
-    val recentTransaction = TransactionSummary(
-        "Sanduíche de Frango",
-        "Aluno 1",
-        "12/07/2024 14:30",
-        "R$ 8,50"
-    )
+fun ParentAccountScreen(nav: NavController, vm: ParentViewModel = viewModel()) {
+    val user by vm.user.collectAsState()
+    val children by vm.children.collectAsState()
+    val recentOrders by vm.recentOrders.collectAsState()
+    val loading by vm.loading.collectAsState()
 
     Scaffold(
         topBar = {
@@ -80,7 +63,7 @@ fun ParentAccountScreen(nav: NavController) {
                     )
                 }
                 Text(
-                    text = "Conta do Responsável", // Título ajustado para clareza (opcional, pode manter só "Conta")
+                    text = "Conta do Responsável",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,
@@ -90,65 +73,83 @@ fun ParentAccountScreen(nav: NavController) {
         },
         bottomBar = { BottomNavBar(nav) }
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .background(LightBackground)
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+        if (loading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = GreenPrimary)
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .background(LightBackground)
+                    .padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
 
-            // --- Seção do Perfil do Pai/Mãe ---
-            item {
-                Spacer(modifier = Modifier.height(24.dp))
-                // Foto do Responsável
-                Box(
-                    modifier = Modifier
-                        .size(120.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFFFFCCBC)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = "Foto do Responsável",
-                        modifier = Modifier.size(80.dp),
-                        tint = Color(0xFF8D6E63)
+                // --- Seção do Perfil do Pai/Mãe ---
+                item {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    // Foto do Responsável
+                    Box(
+                        modifier = Modifier
+                            .size(120.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFFFCCBC)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Foto do Responsável",
+                            modifier = Modifier.size(80.dp),
+                            tint = Color(0xFF8D6E63)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = user?.nome ?: "Carregando...",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black,
+                        textAlign = TextAlign.Center
                     )
+                    Spacer(modifier = Modifier.height(32.dp))
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                // --- Seção: Meus Dependentes ---
+                item {
+                    ParentSectionTitle(text = "Meus Dependentes")
+                }
 
-                Text(
-                    text = "Letícia Silva", // Nome do Pai/Mãe
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black,
-                    textAlign = TextAlign.Center
-                )
-                Spacer(modifier = Modifier.height(32.dp))
-            }
+                if (children.isEmpty()) {
+                    item {
+                        Text("Nenhum dependente encontrado.", color = Color.Gray, fontSize = 14.sp)
+                    }
+                } else {
+                    items(children) { child ->
+                        ChildDependentRow(child)
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+                }
 
-            // --- Seção: Meus Dependentes ---
-            item {
-                ParentSectionTitle(text = "Meus Dependentes")
-            }
+                // --- Seção: Histórico de Transações ---
+                item {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    ParentSectionTitle(text = "Histórico de Transações")
+                }
 
-            items(childrenList) { child ->
-                ChildDependentRow(child)
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-
-            // --- Seção: Histórico de Transações ---
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
-                ParentSectionTitle(text = "Histórico de Transações")
-            }
-
-            item {
-                TransactionSummaryRow(recentTransaction)
-                Spacer(modifier = Modifier.height(24.dp))
+                if (recentOrders.isEmpty()) {
+                    item {
+                        Text("Nenhuma transação recente.", color = Color.Gray, fontSize = 14.sp)
+                    }
+                } else {
+                    items(recentOrders) { order ->
+                        TransactionSummaryRow(order)
+                        Spacer(modifier = Modifier.height(24.dp))
+                    }
+                }
             }
         }
     }
@@ -171,7 +172,7 @@ fun ParentSectionTitle(text: String) {
 }
 
 @Composable
-fun ChildDependentRow(child: ChildDependentItem) {
+fun ChildDependentRow(child: Aluno) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
@@ -185,8 +186,8 @@ fun ChildDependentRow(child: ChildDependentItem) {
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = child.placeholderIcon,
-                contentDescription = "Foto de ${child.name}",
+                imageVector = Icons.Default.Person,
+                contentDescription = "Foto de ${child.nomeCompleto}",
                 modifier = Modifier.size(40.dp),
                 tint = Color(0xFF795548)
             )
@@ -197,23 +198,26 @@ fun ChildDependentRow(child: ChildDependentItem) {
         // Dados do Filho
         Column {
             Text(
-                text = child.name,
+                text = child.nomeCompleto,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black,
                 modifier = Modifier.padding(bottom = 4.dp)
             )
             Text(
-                text = child.details,
+                text = "Turma: ${child.anoOuTurma}",
                 fontSize = 14.sp,
-                color = AppGreen
+                color = Color(0xFF4CAF50) // Usando cor verde similar ao AppGreen anterior
             )
         }
     }
 }
 
 @Composable
-fun TransactionSummaryRow(item: TransactionSummary) {
+fun TransactionSummaryRow(order: Pedido) {
+    val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+    val dateStr = sdf.format(order.data.toDate())
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -221,26 +225,26 @@ fun TransactionSummaryRow(item: TransactionSummary) {
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = item.title,
+                text = order.itens.joinToString(", ") { it.nome },
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black,
                 modifier = Modifier.padding(bottom = 4.dp)
             )
             Text(
-                text = item.studentName,
+                text = order.alunoNome,
                 fontSize = 14.sp,
-                color = AppGreen,
+                color = Color(0xFF4CAF50),
                 modifier = Modifier.padding(bottom = 2.dp)
             )
             Text(
-                text = item.date,
+                text = dateStr,
                 fontSize = 12.sp,
-                color = AppGreen
+                color = Color(0xFF4CAF50)
             )
         }
         Text(
-            text = item.price,
+            text = "R$ ${String.format("%.2f", order.total)}",
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
             color = Color.Black
