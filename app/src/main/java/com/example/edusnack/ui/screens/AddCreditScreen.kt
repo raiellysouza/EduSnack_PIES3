@@ -5,7 +5,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.RadioButtonChecked
@@ -16,33 +15,38 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
+import com.example.edusnack.model.Aluno
 import com.example.edusnack.ui.components.BottomNavBar
+import com.example.edusnack.viewmodel.CreditViewModel
 
-// Cores extraídas da imagem
-val InputBackground = Color(0xFFE8F5E9) // Verde bem clarinho dos campos
-val PrimaryGreen = Color(0xFF00E676) // Verde vibrante do botão principal
-val TextGreen = Color(0xFF4CAF50) // Verde dos textos (R$ 0,00)
+val InputBackground = Color(0xFFE8F5E9)
+val PrimaryGreen = Color(0xFF00E676)
+val TextGreen = Color(0xFF4CAF50)
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddCreditScreen(nav: NavController) {
-    // Estados para controlar os valores da tela
+fun AddCreditScreen(nav: NavController, vm: CreditViewModel = viewModel()) {
     var selectedAmount by remember { mutableStateOf("0,00") }
-    var selectedPaymentMethod by remember { mutableStateOf("Pix") }
+    val children by vm.children.collectAsState()
+    val loading by vm.loading.collectAsState()
+    val success by vm.success.collectAsState()
 
-    // Função auxiliar para definir valor ao clicar nos chips
-    fun setAmount(value: String) {
-        selectedAmount = value
+    var selectedChild by remember { mutableStateOf<Aluno?>(null) }
+    var expanded by remember { mutableStateOf(false) }
+
+    LaunchedEffect(success) {
+        if (success) {
+            nav.navigate("rechargeSuccess")
+            vm.resetSuccess()
+        }
     }
 
     Scaffold(
         topBar = {
-            // Header: Botão Voltar e Título
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -79,7 +83,6 @@ fun AddCreditScreen(nav: NavController) {
         ) {
             Spacer(modifier = Modifier.height(24.dp))
 
-            // --- 1. SELECIONE O ALUNO ---
             Text(
                 text = "Selecione o Aluno",
                 fontSize = 16.sp,
@@ -88,21 +91,41 @@ fun AddCreditScreen(nav: NavController) {
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
-            // Campo Fake de Select (Dropdown)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .background(InputBackground, RoundedCornerShape(8.dp))
-                    .padding(horizontal = 16.dp),
-                contentAlignment = Alignment.CenterStart
+            // Dropdown real para selecionar aluno
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = !expanded }
             ) {
-                Text(text = "Selecione", color = Color.Black, fontSize = 16.sp)
+                TextField(
+                    value = selectedChild?.nomeCompleto ?: "Selecione",
+                    onValueChange = {},
+                    readOnly = true,
+                    modifier = Modifier.menuAnchor().fillMaxWidth(),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = InputBackground,
+                        unfocusedContainerColor = InputBackground,
+                        disabledContainerColor = InputBackground,
+                    ),
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }
+                )
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    children.forEach { child ->
+                        DropdownMenuItem(
+                            text = { Text(child.nomeCompleto) },
+                            onClick = {
+                                selectedChild = child
+                                expanded = false
+                            }
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // --- 2. VALOR A ADICIONAR ---
             Text(
                 text = "Valor a Adicionar",
                 fontSize = 16.sp,
@@ -111,7 +134,6 @@ fun AddCreditScreen(nav: NavController) {
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
-            // Campo de Valor Grande
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -121,37 +143,24 @@ fun AddCreditScreen(nav: NavController) {
                 contentAlignment = Alignment.CenterStart
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "R$ ",
-                        color = TextGreen,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    // Aqui seria um TextField real, usei Text para simplificar o visual
-                    Text(
-                        text = selectedAmount,
-                        color = TextGreen,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Text(text = "R$ ", color = TextGreen, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Text(text = selectedAmount, color = TextGreen, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Chips de Valor Rápido (R$10, R$20, R$50)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                QuickAmountChip(label = "R$10", onClick = { setAmount("10,00") })
-                QuickAmountChip(label = "R$20", onClick = { setAmount("20,00") })
-                QuickAmountChip(label = "R$50", onClick = { setAmount("50,00") })
+                QuickAmountChip(label = "R$10", onClick = { selectedAmount = "10,00" })
+                QuickAmountChip(label = "R$20", onClick = { selectedAmount = "20,00" })
+                QuickAmountChip(label = "R$50", onClick = { selectedAmount = "50,00" })
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // --- 3. MÉTODO DE PAGAMENTO ---
             Text(
                 text = "Método de Pagamento",
                 fontSize = 16.sp,
@@ -160,13 +169,12 @@ fun AddCreditScreen(nav: NavController) {
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
-            // Opção Pix Selecionada
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
-                    .border(1.dp, InputBackground, RoundedCornerShape(8.dp)) // Borda sutil
-                    .background(Color.White, RoundedCornerShape(8.dp)) // Fundo branco na imagem a borda é o destaque, ou fundo muito claro
+                    .border(1.dp, InputBackground, RoundedCornerShape(8.dp))
+                    .background(Color.White, RoundedCornerShape(8.dp))
                     .padding(horizontal = 16.dp)
             ) {
                 Row(
@@ -174,44 +182,28 @@ fun AddCreditScreen(nav: NavController) {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(
-                        text = "Pix",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
-                    )
-                    // Radio Button Simulado (Círculo Verde)
-                    Icon(
-                        imageVector = Icons.Default.RadioButtonChecked, // Requer import correto ou icone customizado
-                        contentDescription = "Selecionado",
-                        tint = PrimaryGreen,
-                        modifier = Modifier.size(24.dp)
-                    )
+                    Text(text = "Pix", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                    Icon(imageVector = Icons.Default.RadioButtonChecked, contentDescription = "Selecionado", tint = PrimaryGreen, modifier = Modifier.size(24.dp))
                 }
             }
 
-            Spacer(modifier = Modifier.weight(1f)) // Empurra o botão para o final
+            Spacer(modifier = Modifier.weight(1f))
 
-            // --- 4. BOTÃO CONFIRMAR ---
-            Button(
-                onClick = {
-                    // Navega para a tela de sucesso criada acima
-                    nav.navigate("rechargeSuccess")
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = PrimaryGreen
-                )
-            ) {
-                Text(
-                    text = "Confirmar Adicionar Crédito",
-                    color = Color.Black, // Texto preto conforme contraste
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
+            if (loading) {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally), color = PrimaryGreen)
+            } else {
+                Button(
+                    onClick = {
+                        val amount = selectedAmount.replace(",", ".").toDoubleOrNull() ?: 0.0
+                        selectedChild?.let { vm.addCredit(it.id, amount) }
+                    },
+                    enabled = selectedChild != null && selectedAmount != "0,00",
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen)
+                ) {
+                    Text(text = "Confirmar Adicionar Crédito", color = Color.Black, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -219,32 +211,17 @@ fun AddCreditScreen(nav: NavController) {
     }
 }
 
-// Componente para os botões pequenos de valor (R$10, R$20...)
 @Composable
 fun QuickAmountChip(label: String, onClick: () -> Unit) {
     Box(
         modifier = Modifier
-            .width(70.dp) // Largura fixa ou wrapContent
+            .width(70.dp)
             .height(36.dp)
             .clip(RoundedCornerShape(8.dp))
             .background(InputBackground)
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = label,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black
-        )
+        Text(text = label, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Black)
     }
-}
-
-// Import necessário para o ícone de Radio Button, caso não tenha o import automático:
-// import androidx.compose.material.icons.filled.RadioButtonChecked
-
-@Preview(showBackground = true)
-@Composable
-fun AddCreditScreenPreview() {
-    AddCreditScreen(nav = rememberNavController())
 }
