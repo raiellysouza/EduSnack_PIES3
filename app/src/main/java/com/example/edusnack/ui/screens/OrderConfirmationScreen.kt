@@ -177,7 +177,7 @@ fun OrderConfirmationScreen(
 }
 
 @Composable
-fun PickupDetailRow(title: String, value: String, icon: ImageVector) {
+private fun PickupDetailRow(title: String, value: String, icon: ImageVector) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
