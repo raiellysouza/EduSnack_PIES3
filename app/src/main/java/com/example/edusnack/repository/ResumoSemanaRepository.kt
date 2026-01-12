@@ -45,7 +45,7 @@ class ResumoSemanaRepository(
         val semana = getSemana(alunoId, idSemana).getOrThrow()
 
         val total = semana.dias.sumOf { dia ->
-            dia.itens.sumOf { it.preco * it.quantidade }
+            dia.itens.sumOf { it.preco?.times(it.quantidade) ?: 0.0 }
         }
 
         Result.success(total)
@@ -83,7 +83,7 @@ class ResumoSemanaRepository(
 
 
     private fun converterParaDiaResumo(dia: Dia): DiaResumo {
-        val total = dia.itens.sumOf { it.preco * it.quantidade }
+        val total = dia.itens.sumOf { it.preco?.times(it.quantidade) ?: 0.0 }
 
         return DiaResumo(
             data = dia.data,

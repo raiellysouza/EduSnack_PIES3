@@ -10,6 +10,8 @@ import androidx.navigation.navArgument
 import com.example.edusnack.ui.screens.*
 import com.example.edusnack.viewmodel.CardapioViewModel
 import com.example.edusnack.viewmodel.CarrinhoViewModel
+import com.google.firebase.auth.FirebaseAuth
+
 
 @Composable
 fun AppNavGraph(start: String = "welcome") {
@@ -54,7 +56,12 @@ fun AppNavGraph(start: String = "welcome") {
             arguments = listOf(navArgument("itemId") { type = NavType.StringType })
         ) { back ->
             val itemId = back.arguments?.getString("itemId") ?: ""
-            ItemDetailsScreen(nav = navController, itemId = itemId, cardapioVm = cardapioVm)
+            ItemDetailsScreen(
+                nav = navController,
+                itemId = itemId,
+                cardapioVm = cardapioVm,
+                carrinhoVm = carrinhoVm
+            )
         }
 
 
@@ -71,16 +78,15 @@ fun AppNavGraph(start: String = "welcome") {
 
             OrderConfirmationScreen(navController, itemName = name, itemPrice = price)
         }
-
-        composable("carrinho") { CarrinhoScreen(navController, usuarioId = "", vm = carrinhoVm) }
+        composable("carrinho") {
+            val uid = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+            CarrinhoScreen(navController, usuarioId = uid, vm = carrinhoVm)
+        }
 
         composable("pedidoConfirmado/{pedidoId}", arguments = listOf(navArgument("pedidoId"){ type = NavType.StringType })) { back ->
             val pedidoId = back.arguments?.getString("pedidoId") ?: ""
             PedidoConfirmadoScreen(navController, pedidoId)
         }
-
-
-
 
 //        Rota dos pais
         composable("myDependents") {MyDependentsScreen((navController))}

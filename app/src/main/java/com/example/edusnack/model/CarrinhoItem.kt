@@ -2,7 +2,7 @@ package com.example.edusnack.model
 
 data class CarrinhoItem(
     val item: Cardapio,
-    var quantidade: Int = 1
+    val quantidade: Int = 1
 ) {
     fun subtotal(): Double = item.preco?.times(quantidade) ?: 0.0
 }

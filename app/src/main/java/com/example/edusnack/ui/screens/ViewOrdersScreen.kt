@@ -24,11 +24,11 @@ import com.example.edusnack.model.StatusPedido
 import com.example.edusnack.ui.components.CanteenBottomNavBar
 import com.example.edusnack.ui.theme.DarkText
 import com.example.edusnack.ui.theme.GreenPrimary
-import com.example.edusnack.viewmodel.OrdersViewModel
+import com.example.edusnack.viewmodel.PedidoViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ViewOrdersScreen(nav: NavController, ordersViewModel: OrdersViewModel = viewModel()) {
+fun ViewOrdersScreen(nav: NavController, ordersViewModel: PedidoViewModel = viewModel()) {
     // Estados para os filtros
     var selectedTimeTab by remember { mutableStateOf(0) } // 0: Hoje, 1: Semana, 2: Todos
     val timeTabs = listOf("Hoje", "Semana", "Todos")
@@ -53,7 +53,7 @@ fun ViewOrdersScreen(nav: NavController, ordersViewModel: OrdersViewModel = view
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.White
                 )
             )

@@ -64,7 +64,7 @@ class MontagemDiaRepository(
 
         dia.itens.add(item.copy())
 
-        dia.totalDia = dia.itens.sumOf { it.preco * it.quantidade }
+        dia.totalDia = dia.itens.sumOf { it.preco?.times(it.quantidade) ?: 0.0 }
 
         salvarSemana(alunoId, idSemana, semana)
 
@@ -94,7 +94,7 @@ class MontagemDiaRepository(
 
         if (!removido) throw Exception("Item não encontrado")
 
-        dia.totalDia = dia.itens.sumOf { it.preco * it.quantidade }
+        dia.totalDia = dia.itens.sumOf { it.preco?.times(it.quantidade) ?: 0.0 }
 
         salvarSemana(alunoId, idSemana, semana)
 
@@ -127,7 +127,7 @@ class MontagemDiaRepository(
 
         dia.itens[index] = dia.itens[index].copy(quantidade = novaQuantidade)
 
-        dia.totalDia = dia.itens.sumOf { it.preco * it.quantidade }
+        dia.totalDia = dia.itens.sumOf { it.preco?.times(it.quantidade) ?: 0.0 }
 
         salvarSemana(alunoId, idSemana, semana)
 
@@ -205,7 +205,7 @@ class MontagemDiaRepository(
         require(dataDia.isNotBlank()) { "Data obrigatória" }
         require(item.itemId.isNotBlank()) { "ID do item obrigatório" }
         require(item.nome.isNotBlank()) { "Nome obrigatório" }
-        require(item.preco > 0) { "Preço deve ser maior que 0" }
+        item.preco?.let { require(it > 0) { "Preço deve ser maior que 0" } }
         require(item.quantidade > 0) { "Quantidade deve ser maior que 0" }
     }
 }
