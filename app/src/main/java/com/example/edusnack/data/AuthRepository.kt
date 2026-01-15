@@ -23,6 +23,30 @@ class AuthRepository(
         return doc.toObject(User::class.java)
     }
 
+    // Busca um usuário pela matrícula
+    suspend fun getUserByMatricula(matricula: String): User? {
+        val query = db.collection("usuarios")
+            .whereEqualTo("matricula", matricula)
+            .whereEqualTo("tipo", "aluno")
+            .limit(1)
+            .get()
+            .await()
+        val doc = query.documents.firstOrNull() ?: return null
+        return doc.toObject(User::class.java)
+    }
+
+    // Vincula um responsável a um aluno existente
+    suspend fun vincularResponsavel(alunoId: String, responsavelId: String): Result<Unit> {
+        return try {
+            db.collection("usuarios").document(alunoId)
+                .update("responsavelId", responsavelId)
+                .await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     // Escuta os dependentes (User) de um responsável em tempo real na coleção 'usuarios'
     fun getDependentesByUser(responsavelId: String): Flow<List<User>> = callbackFlow {
         val listener = db.collection("usuarios")
@@ -70,7 +94,14 @@ class AuthRepository(
         }
     }
 
-    suspend fun register(nome: String, email: String, pass: String, tipo: String, responsavelId: String? = null): Result<String> {
+    suspend fun register(
+        nome: String,
+        email: String,
+        pass: String,
+        tipo: String,
+        responsavelId: String? = null,
+        matricula: String? = null
+    ): Result<String> {
         return try {
             val existing = getUserByEmail(email)
             if (existing != null) {
@@ -91,7 +122,8 @@ class AuthRepository(
                 nome = nome,
                 email = email,
                 tipo = tipo,
-                responsavelId = responsavelId
+                responsavelId = responsavelId,
+                matricula = matricula
             )
 
             db.collection("usuarios").document(uid).set(user).await()

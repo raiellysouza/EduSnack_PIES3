@@ -35,6 +35,7 @@ import com.example.edusnack.model.User
 import com.example.edusnack.ui.components.BottomNavBar
 import kotlinx.coroutines.launch
 
+
 @Composable
 fun MyDependentsScreen(nav: NavController) {
     val context = LocalContext.current
@@ -50,7 +51,6 @@ fun MyDependentsScreen(nav: NavController) {
         isLoading = false
     }
 
-    // Agora busca os dependentes diretamente da coleção 'usuarios' (tipo User)
     val dependents by responsavelId?.let { id ->
         authRepo.getDependentesByUser(id).collectAsState(initial = emptyList())
     } ?: remember { mutableStateOf(emptyList<User>()) }
@@ -101,30 +101,100 @@ fun MyDependentsScreen(nav: NavController) {
                     OptionItem(text = "Adicionar Fundos", icon = Icons.Default.Add, onClick = { })
                 }
                 item {
-                    OptionItem(text = "Adicionar Novo Dependente", icon = Icons.Default.PersonAdd, onClick = { showAddDependentModal = true })
+                    OptionItem(text = "Adicionar/Vincular Dependente", icon = Icons.Default.PersonAdd, onClick = { showAddDependentModal = true })
                 }
             }
         }
 
         if (showAddDependentModal) {
-            AddDependentUserDialog(
+            AddDependentChoiceDialog(
                 onDismiss = { showAddDependentModal = false },
-                onConfirm = { nome, email, senha ->
+                onVincular = { matricula ->
                     responsavelId?.let { resId ->
                         scope.launch {
-                            // Cria apenas o User com tipo 'aluno' e o vínculo do responsável
-                            val result = authRepo.register(nome, email, senha, "aluno", responsavelId = resId)
-                            
-                            if (result.isSuccess) {
-                                showAddDependentModal = false
-                                Toast.makeText(context, "Dependente cadastrado com sucesso!", Toast.LENGTH_SHORT).show()
+                            val aluno = authRepo.getUserByMatricula(matricula)
+                            if (aluno != null) {
+                                val res = authRepo.vincularResponsavel(aluno.id, resId)
+                                if (res.isSuccess) {
+                                    showAddDependentModal = false
+                                    Toast.makeText(context, "Dependente vinculado com sucesso!", Toast.LENGTH_SHORT).show()
+                                }
                             } else {
-                                Toast.makeText(context, "Erro: ${result.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, "Matrícula não encontrada.", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+                },
+                onCriar = { nome, email, senha, matricula ->
+                    responsavelId?.let { resId ->
+                        scope.launch {
+                            val res = authRepo.register(nome, email, senha, "aluno", responsavelId = resId, matricula = matricula)
+                            if (res.isSuccess) {
+                                showAddDependentModal = false
+                                Toast.makeText(context, "Dependente criado e vinculado!", Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(context, "Erro: ${res.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
                             }
                         }
                     }
                 }
             )
+        }
+    }
+}
+
+@Composable
+fun AddDependentChoiceDialog(
+    onDismiss: () -> Unit,
+    onVincular: (String) -> Unit,
+    onCriar: (String, String, String, String) -> Unit
+) {
+    var mode by remember { mutableStateOf("choice") } // choice, vincular, criar
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color.White), modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+            Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(text = "Adicionar Dependente", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                Spacer(modifier = Modifier.height(16.dp))
+
+                when (mode) {
+                    "choice" -> {
+                        Button(onClick = { mode = "vincular" }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = AppGreen)) {
+                            Text("Vincular por Matrícula")
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedButton(onClick = { mode = "criar" }, modifier = Modifier.fillMaxWidth()) {
+                            Text("Criar Novo Aluno", color = AppGreen)
+                        }
+                    }
+                    "vincular" -> {
+                        var matricula by remember { mutableStateOf("") }
+                        OutlinedTextField(value = matricula, onValueChange = { matricula = it }, label = { Text("Matrícula") }, modifier = Modifier.fillMaxWidth())
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                            TextButton(onClick = { mode = "choice" }) { Text("Voltar") }
+                            Button(onClick = { onVincular(matricula) }, colors = ButtonDefaults.buttonColors(containerColor = AppGreen)) { Text("Vincular") }
+                        }
+                    }
+                    "criar" -> {
+                        var nome by remember { mutableStateOf("") }
+                        var email by remember { mutableStateOf("") }
+                        var senha by remember { mutableStateOf("") }
+                        var matricula by remember { mutableStateOf("") }
+                        
+                        OutlinedTextField(value = nome, onValueChange = { nome = it }, label = { Text("Nome Completo") }, modifier = Modifier.fillMaxWidth())
+                        OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("E-mail") }, modifier = Modifier.fillMaxWidth())
+                        OutlinedTextField(value = senha, onValueChange = { senha = it }, label = { Text("Senha") }, modifier = Modifier.fillMaxWidth(), visualTransformation = PasswordVisualTransformation())
+                        OutlinedTextField(value = matricula, onValueChange = { matricula = it }, label = { Text("Matrícula") }, modifier = Modifier.fillMaxWidth())
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                            TextButton(onClick = { mode = "choice" }) { Text("Voltar") }
+                            Button(onClick = { onCriar(nome, email, senha, matricula) }, colors = ButtonDefaults.buttonColors(containerColor = AppGreen)) { Text("Criar") }
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -148,43 +218,6 @@ fun OptionItem(text: String, icon: ImageVector, onClick: () -> Unit) {
 }
 
 @Composable
-fun AddDependentUserDialog(onDismiss: () -> Unit, onConfirm: (String, String, String) -> Unit) {
-    var name by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-
-    Dialog(onDismissRequest = onDismiss) {
-        Card(shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color.White), modifier = Modifier.fillMaxWidth().padding(16.dp), elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)) {
-            Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = "Novo Dependente", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.Black, modifier = Modifier.padding(bottom = 16.dp))
-                
-                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nome Completo") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("E-mail do Aluno") }, modifier = Modifier.fillMaxWidth(), singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email))
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                OutlinedTextField(value = password, onValueChange = { password = it }, label = { Text("Senha") }, modifier = Modifier.fillMaxWidth(), singleLine = true, visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password))
-                
-                Spacer(modifier = Modifier.height(24.dp))
-                
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    TextButton(onClick = onDismiss) { Text("Cancelar", color = Color.Gray) }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Button(
-                        onClick = { if (name.isNotBlank() && email.isNotBlank() && password.length >= 6) { onConfirm(name, email, password) } },
-                        colors = ButtonDefaults.buttonColors(containerColor = AppGreen),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text("Salvar", color = Color.White)
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
 fun DependentUserItem(user: User) {
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Box(modifier = Modifier.size(64.dp).clip(CircleShape).background(Color(0xFFFFCCBC)), contentAlignment = Alignment.Center) {
@@ -193,7 +226,7 @@ fun DependentUserItem(user: User) {
         Spacer(modifier = Modifier.width(16.dp))
         Column {
             Text(text = user.nome, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-            Text(text = user.email, fontSize = 14.sp, color = Color.Gray)
+            Text(text = "Matrícula: ${user.matricula ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
         }
     }
 }
