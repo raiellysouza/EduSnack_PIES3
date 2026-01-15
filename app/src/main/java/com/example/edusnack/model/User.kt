@@ -6,5 +6,6 @@ data class User(
     val email: String = "",
     val tipo: String = "", // aluno | responsavel | cantina
     val fotoUrl: String = "",
-    val responsavelId: String? = null // ID do pai/mãe vinculado
+    val responsavelId: String? = null, // ID do pai/mãe vinculado
+    val matricula: String? = null // Matrícula opcional
 )

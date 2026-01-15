@@ -15,25 +15,15 @@ import androidx.compose.foundation.clickable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.ui.draw.clip
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(nav: NavController, vm: AuthViewModel = viewModel()) {
-    // Step 1: user type selection
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -108,9 +98,7 @@ fun RegisterScreen(nav: NavController, vm: AuthViewModel = viewModel()) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DataRegistrationScreen(nav: NavController, tipo: String, vm: AuthViewModel = viewModel()) {
-    // New screen: fields vary by tipo
     var nome by remember { mutableStateOf("") }
-    // For student-specific fields
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
     var registrationNumber by remember { mutableStateOf("") }
@@ -132,7 +120,6 @@ fun DataRegistrationScreen(nav: NavController, tipo: String, vm: AuthViewModel =
     val error by vm.error.collectAsState()
     val success by vm.success.collectAsState()
 
-    // On success, navigate to appropriate home
     if (success) {
         val destino = when (tipo) {
             "cantina" -> "homeCantina"
@@ -168,7 +155,6 @@ fun DataRegistrationScreen(nav: NavController, tipo: String, vm: AuthViewModel =
             Spacer(Modifier.height(24.dp))
 
             if (tipo == "aluno") {
-                // Student registration sequence
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedTextField(
                         value = firstName,
@@ -199,7 +185,6 @@ fun DataRegistrationScreen(nav: NavController, tipo: String, vm: AuthViewModel =
 
                 Spacer(Modifier.height(16.dp))
 
-                // Food restrictions tag input
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
                         value = restrictionInput,
@@ -222,7 +207,6 @@ fun DataRegistrationScreen(nav: NavController, tipo: String, vm: AuthViewModel =
 
                 Spacer(Modifier.height(12.dp))
 
-                // Display tags
                 if (foodRestrictions.isNotEmpty()) {
                     FlowRow(
                         modifier = Modifier.fillMaxWidth(),
@@ -241,11 +225,9 @@ fun DataRegistrationScreen(nav: NavController, tipo: String, vm: AuthViewModel =
                             }
                         }
                     }
-
                     Spacer(Modifier.height(16.dp))
                 }
 
-                // Continue with email/password
                 TextField(
                     value = email,
                     onValueChange = { email = it },
@@ -299,7 +281,6 @@ fun DataRegistrationScreen(nav: NavController, tipo: String, vm: AuthViewModel =
 
                 Button(
                     onClick = {
-                        // Basic validation
                         localError = null
                         if (firstName.isBlank()) localError = "Nome é obrigatório"
                         else if (lastName.isBlank()) localError = "Sobrenome é obrigatório"
@@ -309,7 +290,6 @@ fun DataRegistrationScreen(nav: NavController, tipo: String, vm: AuthViewModel =
                         else if (pass != confirm) localError = "As senhas não coincidem"
 
                         if (localError == null) {
-                            // Build profile map for student
                             val fullName = (firstName + " " + lastName).trim()
                             val profile = mapOf(
                                 "role" to "STUDENT",
@@ -319,8 +299,8 @@ fun DataRegistrationScreen(nav: NavController, tipo: String, vm: AuthViewModel =
                                 "foodRestrictions" to foodRestrictions.toList(),
                                 "email" to email
                             )
-
-                            vm.register(fullName, email, pass, tipo, profile)
+                            // Passando registrationNumber como matrícula
+                            vm.register(fullName, email, pass, tipo, profile, registrationNumber)
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
@@ -331,7 +311,6 @@ fun DataRegistrationScreen(nav: NavController, tipo: String, vm: AuthViewModel =
                     Text("Criar Conta")
                 }
 
-                // Show validation or repo errors
                 localError?.let {
                     Spacer(Modifier.height(12.dp))
                     Text(it, color = MaterialTheme.colorScheme.error)
@@ -349,7 +328,6 @@ fun DataRegistrationScreen(nav: NavController, tipo: String, vm: AuthViewModel =
                 }
 
             } else {
-                // ...existing code for cantina and responsavel
                 TextField(
                     value = nome,
                     onValueChange = { nome = it },
@@ -447,7 +425,6 @@ fun DataRegistrationScreen(nav: NavController, tipo: String, vm: AuthViewModel =
 
                 Button(
                     onClick = {
-                        // Basic validation
                         localError = null
                         if (nome.isBlank()) localError = "Nome é obrigatório"
                         else if (email.isBlank()) localError = "E-mail é obrigatório"
@@ -455,7 +432,6 @@ fun DataRegistrationScreen(nav: NavController, tipo: String, vm: AuthViewModel =
                         else if (pass != confirm) localError = "As senhas não coincidem"
 
                         if (localError == null) {
-                            // Build profile map for canteen
                             val profile = if (tipo == "cantina") {
                                 mapOf(
                                     "canteenName" to nome,
@@ -467,8 +443,8 @@ fun DataRegistrationScreen(nav: NavController, tipo: String, vm: AuthViewModel =
                             } else {
                                 mapOf("name" to nome)
                             }
-
-                            vm.register(nome, email, pass, tipo, profile)
+                            // Para os demais tipos, matricula é null
+                            vm.register(nome, email, pass, tipo, profile, null)
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
@@ -479,7 +455,6 @@ fun DataRegistrationScreen(nav: NavController, tipo: String, vm: AuthViewModel =
                     Text("Criar Conta")
                 }
 
-                // Show validation or repo errors
                 localError?.let {
                     Spacer(Modifier.height(12.dp))
                     Text(it, color = MaterialTheme.colorScheme.error)

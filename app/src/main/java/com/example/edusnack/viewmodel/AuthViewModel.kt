@@ -39,26 +39,31 @@ class AuthViewModel(
         }
     }
 
-    fun register(nome: String, email: String, pass: String, tipo: String, profileData: Map<String, Any>? = null) {
+    // Adicionado o parâmetro matricula
+    fun register(
+        nome: String,
+        email: String,
+        pass: String,
+        tipo: String,
+        profileData: Map<String, Any>? = null,
+        matricula: String? = null
+    ) {
         viewModelScope.launch {
             _loading.value = true
             _error.value = null
 
-            // For canteen, persist tipo as uppercase CANTEEN and save profile under 'users' collection
             val isCanteen = tipo.equals("cantina", ignoreCase = true) || tipo.equals("CANTEEN", ignoreCase = true)
             val tipoToSave = if (isCanteen) "CANTEEN" else tipo
 
-            val result = repo.register(nome, email, pass, tipoToSave)
+            // Passando matricula para o repositório
+            val result = repo.register(nome, email, pass, tipoToSave, matricula = matricula)
             if (result.isSuccess) {
                 val newUid = result.getOrNull() ?: ""
-                // save profile data if provided
                 if (profileData != null) {
                     try {
-                        // If canteen, save profile under 'users' collection as required
                         val collectionName = if (isCanteen) "users" else "profiles"
                         repo.saveProfile(newUid, profileData, collectionName)
                     } catch (e: Exception) {
-                        // Registration succeeded but profile save failed — report error and stop
                         _loading.value = false
                         _error.value = "Conta criada, mas falha ao salvar perfil: ${e.message}"
                         return@launch
