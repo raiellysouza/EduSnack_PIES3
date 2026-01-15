@@ -3,6 +3,9 @@ package com.example.edusnack.repository
 import com.example.edusnack.model.Aluno
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import java.util.Locale
 
@@ -10,6 +13,17 @@ class AlunoRepository(
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
 ) {
     private val alunos get() = firestore.collection("alunos")
+
+    fun getDependentes(responsavelId: String): Flow<List<Aluno>> = callbackFlow {
+        val listener = alunos
+            .whereEqualTo("responsavelId", responsavelId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) return@addSnapshotListener
+                val lista = snapshot?.toObjects(Aluno::class.java) ?: emptyList()
+                trySend(lista)
+            }
+        awaitClose { listener.remove() }
+    }
 
     suspend fun criarAluno(aluno: Aluno): Result<String> = try {
         validarAluno(aluno)

@@ -3,6 +3,9 @@ package com.example.edusnack.data
 import com.example.edusnack.model.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
 class AuthRepository(
@@ -14,22 +17,31 @@ class AuthRepository(
         return tipo?.lowercase()?.let { it == "cantina" || it == "canteen" } == true
     }
 
-    // Query user by email in 'usuarios' collection
     suspend fun getUserByEmail(email: String): User? {
         val query = db.collection("usuarios").whereEqualTo("email", email).limit(1).get().await()
         val doc = query.documents.firstOrNull() ?: return null
         return doc.toObject(User::class.java)
     }
 
-    // Save additional profile data under a collection (doc id = uid). Default collection is 'profiles'
+    // Escuta os dependentes (User) de um responsável em tempo real na coleção 'usuarios'
+    fun getDependentesByUser(responsavelId: String): Flow<List<User>> = callbackFlow {
+        val listener = db.collection("usuarios")
+            .whereEqualTo("responsavelId", responsavelId)
+            .whereEqualTo("tipo", "aluno")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) return@addSnapshotListener
+                val lista = snapshot?.toObjects(User::class.java) ?: emptyList()
+                trySend(lista)
+            }
+        awaitClose { listener.remove() }
+    }
+
     suspend fun saveProfile(uid: String, profileData: Map<String, Any>, collectionName: String = "profiles") {
         db.collection(collectionName).document(uid).set(profileData).await()
     }
 
-    // Modified login: requires the UI to pass the selected user type to enforce exclusivity
     suspend fun login(email: String, pass: String, selectedTipo: String): Result<String> {
         try {
-            // Fetch any existing user with this email to validate type rules before auth
             val existing = getUserByEmail(email)
             if (existing != null) {
                 val existingIsCantina = isCanteenTipo(existing.tipo)
@@ -42,7 +54,6 @@ class AuthRepository(
             auth.signInWithEmailAndPassword(email, pass).await()
             val uid = auth.currentUser?.uid ?: ""
 
-            // After authenticating, double-check stored user tipo matches selectedTipo (accepting equivalent forms)
             val userSnap = db.collection("usuarios").document(uid).get().await()
             val user = userSnap.toObject(User::class.java)
             if (user == null) return Result.failure(Exception("Usuário não encontrado no banco."))
@@ -59,10 +70,8 @@ class AuthRepository(
         }
     }
 
-    // Modified register: enforce email exclusivity and persist base user. Optionally accepts profile data after creation.
-    suspend fun register(nome: String, email: String, pass: String, tipo: String): Result<String> {
+    suspend fun register(nome: String, email: String, pass: String, tipo: String, responsavelId: String? = null): Result<String> {
         return try {
-            // Check existing registration by email
             val existing = getUserByEmail(email)
             if (existing != null) {
                 val existingIsCantina = isCanteenTipo(existing.tipo)
@@ -81,15 +90,15 @@ class AuthRepository(
                 id = uid,
                 nome = nome,
                 email = email,
-                tipo = tipo
+                tipo = tipo,
+                responsavelId = responsavelId
             )
 
-            // Persist base user under 'usuarios' collection
             db.collection("usuarios").document(uid).set(user).await()
 
             Result.success(uid)
         } catch (e: Exception) {
-            Result.failure(e)
+            return Result.failure(e)
         }
     }
 
