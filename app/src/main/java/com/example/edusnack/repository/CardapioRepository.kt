@@ -35,4 +35,19 @@ class CardapioRepository(
         }
     }
 
+    suspend fun listarDisponiveisHoje(diaSemana: String): List<Cardapio> {
+        return try {
+            val snap = db.collection("cardapio")
+                .whereEqualTo("ativo", true)
+                .whereArrayContains("diasDisponiveis", diaSemana) // ex: "MONDAY"
+                .get()
+                .await()
+
+            snap.toObjects(Cardapio::class.java)
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+
 }

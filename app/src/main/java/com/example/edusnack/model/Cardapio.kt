@@ -20,8 +20,9 @@ data class Cardapio(
     var ativo: Boolean = true,
     var autorId: String = "",
     var criadoEm: Timestamp = Timestamp.now(),
-    var atualizadoEm: Timestamp = Timestamp.now()
-) {
+    var atualizadoEm: Timestamp = Timestamp.now(),
+    var diasDisponiveis: List<String> = emptyList(),
+    ) {
     fun validarOuErro(): String? {
         if (nome.isBlank()) return "Nome não pode estar em branco"
         if (descricao.isBlank()) return "Descrição não pode estar em branco"
