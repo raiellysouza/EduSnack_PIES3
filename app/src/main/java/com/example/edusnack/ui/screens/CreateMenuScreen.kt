@@ -3,8 +3,8 @@ package com.example.edusnack.ui.screens
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,6 +30,7 @@ import com.example.edusnack.model.Cardapio
 import com.example.edusnack.ui.theme.DarkText
 import com.example.edusnack.ui.theme.GreenPrimary
 import com.example.edusnack.viewmodel.CardapioViewModel
+import java.time.DayOfWeek
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,7 +39,10 @@ fun CreateMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
     var nome by remember { mutableStateOf("") }
     var descricao by remember { mutableStateOf("") }
     var preco by remember { mutableStateOf("") }
-    var categoria by remember { mutableStateOf("") }
+
+    // Categoria (dropdown)
+    val categorias = remember { listOf("Salgados", "Sucos", "Bolos", "Lanches") }
+    var categoria by remember { mutableStateOf("Lanches") }
 
     // Estado da Imagem
     var imagemUri by remember { mutableStateOf<Uri?>(null) }
@@ -48,9 +52,18 @@ fun CreateMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
         imagemUri = uri
     }
 
-    // Estados de Disponibilidade
-    var datas by remember { mutableStateOf("") }
-    var dias by remember { mutableStateOf("") }
+    // Disponibilidade (dias da semana) - default: Seg–Sex
+    var selectedWeekdays by remember {
+        mutableStateOf(
+            setOf(
+                DayOfWeek.MONDAY,
+                DayOfWeek.TUESDAY,
+                DayOfWeek.WEDNESDAY,
+                DayOfWeek.THURSDAY,
+                DayOfWeek.FRIDAY
+            )
+        )
+    }
 
     // Estados dos Checkboxes
     var contemLactose by remember { mutableStateOf(false) }
@@ -160,17 +173,19 @@ fun CreateMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
 
             item { Spacer(modifier = Modifier.height(16.dp)) }
 
+            // --- CATEGORIA (LISTA) ---
             item {
-                CustomTextField(
+                CategoryDropdownField(
                     value = categoria,
-                    onValueChange = { categoria = it },
+                    options = categorias,
+                    onSelect = { categoria = it },
                     label = "Categoria"
                 )
             }
 
             item { Spacer(modifier = Modifier.height(24.dp)) }
 
-            // --- DISPONIBILIDADE ---
+            // --- DISPONIBILIDADE (DIAS DA SEMANA) ---
             item {
                 Text(
                     "Disponibilidade",
@@ -183,20 +198,10 @@ fun CreateMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
             item { Spacer(modifier = Modifier.height(16.dp)) }
 
             item {
-                CustomTextField(
-                    value = datas,
-                    onValueChange = { datas = it },
-                    label = "Datas"
-                )
-            }
-
-            item { Spacer(modifier = Modifier.height(16.dp)) }
-
-            item {
-                CustomTextField(
-                    value = dias,
-                    onValueChange = { dias = it },
-                    label = "Dias"
+                WeekdayMultiSelectField(
+                    selectedDays = selectedWeekdays,
+                    onChange = { selectedWeekdays = it },
+                    label = "Dias da semana"
                 )
             }
 
@@ -268,20 +273,24 @@ fun CreateMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
                     Button(
                         onClick = {
                             val precoDouble = preco.trim().replace(",", ".").toDoubleOrNull()
-                            if (nome.isBlank() || precoDouble == null) {
-                                return@Button
-                            }
+                            if (nome.isBlank() || precoDouble == null) return@Button
+
+                            // ✅ Dias da semana como lista de strings: ["MONDAY","TUESDAY",...]
+                            val diasDisponiveis = selectedWeekdays
+                                .sortedBy { it.value % 7 } // Dom(0) ... Sáb(6) se você quiser Dom primeiro
+                                .map { it.name }
 
                             val item = Cardapio(
                                 nome = nome.trim(),
                                 descricao = descricao.trim(),
                                 preco = precoDouble,
-                                categoria = if (categoria.isBlank()) "Lanches" else categoria.trim(),
+                                categoria = categoria.trim(),
                                 possuiLactose = contemLactose,
                                 possuiGluten = contemGluten,
                                 vegano = vegano,
                                 vegetariano = vegano,
-                                autorId = "admin"
+                                autorId = "admin",
+                                diasDisponiveis = diasDisponiveis
                             )
 
                             vm.salvarItem(
@@ -331,4 +340,239 @@ fun CustomTextField(
             cursorColor = Color(0xFF4CAF50)
         )
     )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CategoryDropdownField(
+    value: String,
+    options: List<String>,
+    onSelect: (String) -> Unit,
+    label: String
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded }
+    ) {
+        TextField(
+            value = value,
+            onValueChange = {},
+            readOnly = true,
+            placeholder = { Text(label, color = Color(0xFF4CAF50)) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .menuAnchor(),
+            shape = RoundedCornerShape(12.dp),
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = Color(0xFFE9F2E8),
+                unfocusedContainerColor = Color(0xFFE9F2E8),
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                cursorColor = Color(0xFF4CAF50)
+            )
+        )
+
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            options.forEach { opt ->
+                DropdownMenuItem(
+                    text = { Text(opt) },
+                    onClick = {
+                        onSelect(opt)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun WeekdayMultiSelectField(
+    selectedDays: Set<DayOfWeek>,
+    onChange: (Set<DayOfWeek>) -> Unit,
+    label: String
+) {
+    var open by remember { mutableStateOf(false) }
+
+    val ordered = listOf(
+        DayOfWeek.SUNDAY,
+        DayOfWeek.MONDAY,
+        DayOfWeek.TUESDAY,
+        DayOfWeek.WEDNESDAY,
+        DayOfWeek.THURSDAY,
+        DayOfWeek.FRIDAY,
+        DayOfWeek.SATURDAY
+    )
+
+    val summary = remember(selectedDays) {
+        if (selectedDays.isEmpty()) label
+        else ordered
+            .filter { selectedDays.contains(it) }
+            .joinToString(", ") { it.toPtBrShort() }
+    }
+
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .clickable { open = true },
+        color = Color(0xFFE9F2E8)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 18.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = summary,
+                color = if (selectedDays.isEmpty()) Color(0xFF4CAF50) else DarkText,
+                modifier = Modifier.weight(1f)
+            )
+            Text("▼", color = Color(0xFF4CAF50))
+        }
+    }
+
+    if (open) {
+        WeekdayMultiSelectDialog(
+            initialSelected = selectedDays,
+            onDismiss = { open = false },
+            onConfirm = {
+                onChange(it)
+                open = false
+            }
+        )
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun WeekdayMultiSelectDialog(
+    initialSelected: Set<DayOfWeek>,
+    onDismiss: () -> Unit,
+    onConfirm: (Set<DayOfWeek>) -> Unit
+) {
+    var selected by remember { mutableStateOf(initialSelected) }
+
+    val ordered = listOf(
+        DayOfWeek.SUNDAY,
+        DayOfWeek.MONDAY,
+        DayOfWeek.TUESDAY,
+        DayOfWeek.WEDNESDAY,
+        DayOfWeek.THURSDAY,
+        DayOfWeek.FRIDAY,
+        DayOfWeek.SATURDAY
+    )
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Selecionar dias", fontWeight = FontWeight.Bold) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+
+                // Ações rápidas
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    AssistChip(
+                        onClick = { selected = ordered.toSet() },
+                        label = { Text("Todos") }
+                    )
+                    AssistChip(
+                        onClick = { selected = emptySet() },
+                        label = { Text("Limpar") }
+                    )
+                    AssistChip(
+                        onClick = {
+                            selected = setOf(
+                                DayOfWeek.MONDAY,
+                                DayOfWeek.TUESDAY,
+                                DayOfWeek.WEDNESDAY,
+                                DayOfWeek.THURSDAY,
+                                DayOfWeek.FRIDAY
+                            )
+                        },
+                        label = { Text("Seg–Sex") }
+                    )
+                }
+
+                // Chips dos dias
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    ordered.forEach { day ->
+                        val isSelected = selected.contains(day)
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = {
+                                selected = if (isSelected) selected - day else selected + day
+                            },
+                            label = {
+                                Text(
+                                    text = day.toPtBrShort(),
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                )
+                            },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = Color(0xFFB9F6CA),
+                                containerColor = Color.Transparent
+                            ),
+                            border = FilterChipDefaults.filterChipBorder(
+                                enabled = true,
+                                selected = isSelected,
+                                borderColor = Color(0xFF4CAF50),
+                                selectedBorderColor = Color(0xFF2E7D32),
+                                borderWidth = 1.dp
+                            )
+                        )
+                    }
+                }
+
+                if (selected.isNotEmpty()) {
+                    val preview = ordered
+                        .filter { selected.contains(it) }
+                        .joinToString(", ") { it.toPtBrShort() }
+
+                    Text(
+                        "Selecionados: $preview",
+                        fontSize = 12.sp,
+                        color = Color(0xFF2E7D32)
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onConfirm(selected) },
+                colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("Confirmar", color = DarkText, fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancelar") }
+        }
+    )
+}
+
+private fun DayOfWeek.toPtBrShort(): String {
+    return when (this) {
+        DayOfWeek.SUNDAY -> "Dom"
+        DayOfWeek.MONDAY -> "Seg"
+        DayOfWeek.TUESDAY -> "Ter"
+        DayOfWeek.WEDNESDAY -> "Qua"
+        DayOfWeek.THURSDAY -> "Qui"
+        DayOfWeek.FRIDAY -> "Sex"
+        DayOfWeek.SATURDAY -> "Sáb"
+    }
 }

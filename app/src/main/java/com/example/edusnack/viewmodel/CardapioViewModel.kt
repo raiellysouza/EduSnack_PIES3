@@ -142,7 +142,8 @@ class CardapioViewModel(
                 "acao" to acao,
                 "preco" to (item.preco ?: 0.0),
                 "data" to com.google.firebase.Timestamp.now(),
-                "imageUrl" to (item.imagemUrl ?: "")
+                "imageUrl" to (item.imagemUrl ?: ""),
+                "diasDisponiveis" to item.diasDisponiveis
             )
             FirebaseFirestore.getInstance().collection("historico_cardapio").add(historico).await()
             carregarHistorico()

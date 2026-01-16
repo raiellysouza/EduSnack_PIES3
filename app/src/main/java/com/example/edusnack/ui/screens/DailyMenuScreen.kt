@@ -23,6 +23,8 @@ import coil.compose.AsyncImage
 import com.example.edusnack.model.Cardapio
 import com.example.edusnack.ui.components.BottomNavBar
 import com.example.edusnack.viewmodel.CardapioViewModel
+import java.time.LocalDate
+
 
 // Cores extraídas da imagem
 val GreenText = Color(0xFF4CAF50)
@@ -50,11 +52,15 @@ fun DailyMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
         else -> "Lanches"
     }
 
-    val filtrados = remember(itens, categoriaSelecionada) {
+    val hoje = remember { LocalDate.now().dayOfWeek.name } // "MONDAY", "TUESDAY", ...
+
+    val filtrados = remember(itens, categoriaSelecionada, hoje) {
         itens
             .filter { it.ativo }
             .filter { it.categoria.equals(categoriaSelecionada, ignoreCase = true) }
+            .filter { it.diasDisponiveis.isEmpty() || it.diasDisponiveis.contains(hoje) }
     }
+
 
     Scaffold(
         topBar = {

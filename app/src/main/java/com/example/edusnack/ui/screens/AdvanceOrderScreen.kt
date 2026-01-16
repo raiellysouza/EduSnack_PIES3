@@ -69,14 +69,6 @@ fun AdvanceOrderScreen(nav: NavController, vm: CardapioViewModel = viewModel()) 
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
 
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    item { CategoryItem("Saladas", "https://example.com/salada.jpg") }
-                    item { CategoryItem("Sanduíches", "https://example.com/sanduiche.jpg") }
-                    item { CategoryItem("Massas", "https://example.com/massa.jpg") }
-                }
-
                 Spacer(modifier = Modifier.height(32.dp))
             }
 
