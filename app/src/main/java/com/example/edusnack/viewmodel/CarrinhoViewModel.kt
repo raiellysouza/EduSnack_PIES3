@@ -20,12 +20,15 @@ class CarrinhoViewModel(
     private val _itens = MutableStateFlow<List<CarrinhoItem>>(emptyList())
     val itens = _itens.asStateFlow()
 
-    fun adicionar(item: Cardapio) {
+    // Atualizado para aceitar os dias de reserva
+    fun adicionar(item: Cardapio, dias: List<String> = emptyList()) {
         val atual = _itens.value
-        val idx = atual.indexOfFirst { it.item.id == item.id }
+        // Se já existe o item com os MESMOS dias, aumenta a quantidade. 
+        // Se os dias forem diferentes, tratamos como um novo item no carrinho para não confundir.
+        val idx = atual.indexOfFirst { it.item.id == item.id && it.diasReserva == dias }
 
         _itens.value = if (idx == -1) {
-            atual + CarrinhoItem(item, quantidade = 1)
+            atual + CarrinhoItem(item, quantidade = 1, diasReserva = dias)
         } else {
             atual.mapIndexed { i, ci ->
                 if (i == idx) ci.copy(quantidade = ci.quantidade + 1) else ci
@@ -48,7 +51,6 @@ class CarrinhoViewModel(
         }
     }
 
-
     fun total(): Double = _itens.value.sumOf { it.subtotal() }
 
     fun limpar() { _itens.value = emptyList() }
@@ -65,17 +67,20 @@ class CarrinhoViewModel(
                     ItemPedido(
                         itemId = ci.item.id,
                         nome = ci.item.nome,
-                        preco = ci.item.preco, // Cardapio.preco é Double
+                        preco = ci.item.preco,
                         quantidade = ci.quantidade,
-                        preparoNaHora = false
+                        preparoNaHora = false,
+                        diasReserva = ci.diasReserva // PASSANDO OS DIAS PARA O PEDIDO REAL
                     )
                 }
-                val total = itensPedido.sumOf { it.preco?.times(it.quantidade) ?: 0.0 }
+                
+                // Cálculo do total considerando a quantidade de dias
+                val total = _itens.value.sumOf { it.subtotal() }
 
                 val pedido = Pedido(
                     alunoId = usuarioId,
-                    alunoNome = "",  // depois a gente puxa do profile
-                    turma = "",      // depois a gente puxa do profile
+                    alunoNome = "", 
+                    turma = "",      
                     itens = itensPedido,
                     status = StatusPedido.PENDENTE,
                     total = total,
@@ -95,8 +100,6 @@ class CarrinhoViewModel(
     }
 
     private fun gerarCodigoRetirada(): String {
-        // 6 dígitos
         return (100000..999999).random(Random(System.currentTimeMillis())).toString()
     }
-
 }

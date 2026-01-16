@@ -13,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -20,7 +21,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.edusnack.model.Pedido
-import com.example.edusnack.model.StatusPedido
 import com.example.edusnack.ui.components.CanteenBottomNavBar
 import com.example.edusnack.ui.theme.DarkText
 import com.example.edusnack.ui.theme.GreenPrimary
@@ -28,34 +28,30 @@ import com.example.edusnack.viewmodel.PedidoViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ViewOrdersScreen(nav: NavController, ordersViewModel: PedidoViewModel = viewModel()) {
+fun ViewOrdersScreen(nav: NavController, viewModel: PedidoViewModel = viewModel()) {
     // Estados para os filtros
-    var selectedTimeTab by remember { mutableStateOf(0) } // 0: Hoje, 1: Semana, 2: Todos
-    val timeTabs = listOf("Hoje", "Semana", "Todos")
+    var selectedDayFilter by remember { mutableStateOf("Todos") }
+    val diasFiltro = listOf("Todos", "Seg", "Ter", "Qua", "Qui", "Sex")
 
-    var selectedStatusTab by remember { mutableStateOf(0) } // 0: Pendentes, 1: Preparando...
+    var selectedStatusTab by remember { mutableIntStateOf(0) }
     val statusTabs = listOf("Pendentes", "Preparando", "Prontos", "Entregues")
 
     var searchText by remember { mutableStateOf("") }
 
-    val ordersBySeries by ordersViewModel.ordersBySeries.collectAsState()
-    val loading by ordersViewModel.loading.collectAsState()
-    val error by ordersViewModel.error.collectAsState()
+    val ordersBySeries by viewModel.ordersBySeries.collectAsState()
+    val loading by viewModel.loading.collectAsState()
+    val error by viewModel.error.collectAsState()
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = {
-                    Text("Pedidos", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                },
+                title = { Text("Pedidos", fontWeight = FontWeight.Bold, fontSize = 18.sp) },
                 navigationIcon = {
                     IconButton(onClick = { nav.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White
-                )
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.White)
             )
         },
         bottomBar = { CanteenBottomNavBar(nav) },
@@ -66,56 +62,56 @@ fun ViewOrdersScreen(nav: NavController, ordersViewModel: PedidoViewModel = view
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // --- ABAS DE TEMPO (Hoje / Semana / Todos) ---
+            // --- FILTRO POR DIA DA SEMANA ---
+            Text(
+                text = "Filtrar por dia da semana:",
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
+                fontSize = 14.sp,
+                color = Color.Gray,
+                fontWeight = FontWeight.Bold
+            )
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp),
-                horizontalArrangement = Arrangement.Start
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                timeTabs.forEachIndexed { index, title ->
-                    Column(
+                diasFiltro.forEach { dia ->
+                    val isSelected = selectedDayFilter == dia
+                    Box(
                         modifier = Modifier
-                            .padding(end = 24.dp)
-                            .clickable { selectedTimeTab = index },
-                        horizontalAlignment = Alignment.CenterHorizontally
+                            .weight(1f)
+                            .height(36.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(if (isSelected) GreenPrimary else Color(0xFFF5F5F5))
+                            .clickable { selectedDayFilter = dia },
+                        contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = title,
-                            color = if (selectedTimeTab == index) DarkText else Color.Gray,
-                            fontWeight = if (selectedTimeTab == index) FontWeight.Bold else FontWeight.Normal,
-                            fontSize = 16.sp
+                            text = dia,
+                            color = if (isSelected) Color.White else Color.Black,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
                         )
-                        if (selectedTimeTab == index) {
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Box(
-                                modifier = Modifier
-                                    .width(24.dp)
-                                    .height(3.dp)
-                                    .background(GreenPrimary, RoundedCornerShape(2.dp))
-                            )
-                        }
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // --- ABAS DE STATUS (Pendentes / Preparando...) ---
+            // --- ABAS DE STATUS ---
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                statusTabs.forEach { status ->
-                    val isSelected = status == statusTabs[selectedStatusTab]
+                statusTabs.forEachIndexed { index, status ->
+                    val isSelected = index == selectedStatusTab
                     Text(
                         text = status,
                         color = if (isSelected) GreenPrimary else Color.Gray,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                         fontSize = 14.sp,
-                        modifier = Modifier.clickable {
-                            selectedStatusTab = statusTabs.indexOf(status)
-                        }
+                        modifier = Modifier.clickable { selectedStatusTab = index }
                     )
                 }
             }
@@ -142,45 +138,37 @@ fun ViewOrdersScreen(nav: NavController, ordersViewModel: PedidoViewModel = view
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // --- LISTA DE PEDIDOS AGRUPADOS POR TURMA ---
             if (loading) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = GreenPrimary)
                 }
             } else if (error != null) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(text = "Erro: ${error}", color = Color.Red)
+                    Text(text = error ?: "Erro desconhecido", color = Color.Red)
                 }
             } else {
                 LazyColumn(
                     contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
-                    // Iterate over series and render header + list or empty message
                     ordersBySeries.forEach { (series, pedidos) ->
-                        // Header for the series
-                        item {
-                            Column(modifier = Modifier.fillMaxWidth()) {
-                                Text(series, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = DarkText)
-                                Spacer(modifier = Modifier.height(8.dp))
-                            }
+                        // Filtrar pedidos pelo dia selecionado
+                        val pedidosFiltrados = pedidos.filter { pedido ->
+                            if (selectedDayFilter == "Todos") true
+                            else pedido.itens.any { item -> item.diasReserva.contains(selectedDayFilter) }
                         }
 
-                        if (pedidos.isEmpty()) {
+                        if (pedidosFiltrados.isNotEmpty()) {
                             item {
-                                Text("Sem pedidos dessa turma", color = Color.Gray, modifier = Modifier.padding(start = 24.dp))
+                                Text(series, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = DarkText)
                             }
-                        } else {
-                            items(pedidos) { pedido ->
-                                SimpleOrderCard(pedido = pedido, onMarkDelivered = {
-                                    ordersViewModel.markAsDelivered(pedido.id)
+                            items(pedidosFiltrados) { pedido ->
+                                OrderCardWithDays(pedido = pedido, onMarkDelivered = {
+                                    viewModel.markAsDelivered(pedido.id)
                                 })
-                                Spacer(modifier = Modifier.height(12.dp))
                             }
                         }
                     }
-
-                    item { Spacer(modifier = Modifier.height(32.dp)) }
                 }
             }
         }
@@ -188,7 +176,7 @@ fun ViewOrdersScreen(nav: NavController, ordersViewModel: PedidoViewModel = view
 }
 
 @Composable
-fun SimpleOrderCard(pedido: Pedido, onMarkDelivered: () -> Unit) {
+fun OrderCardWithDays(pedido: Pedido, onMarkDelivered: () -> Unit) {
     Column(modifier = Modifier
         .fillMaxWidth()
         .background(Color(0xFFF8FFF8), RoundedCornerShape(12.dp))
@@ -197,8 +185,22 @@ fun SimpleOrderCard(pedido: Pedido, onMarkDelivered: () -> Unit) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = pedido.alunoNome, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = DarkText)
-                val itemsText = pedido.itens.joinToString(", ") { it.nome }
-                Text(text = itemsText, color = Color.Gray, fontSize = 14.sp)
+                
+                // Exibe itens e seus respectivos dias
+                pedido.itens.forEach { item ->
+                    Column(modifier = Modifier.padding(top = 4.dp)) {
+                        Text(text = "• ${item.nome}", color = Color.Black, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                        if (item.diasReserva.isNotEmpty()) {
+                            Text(
+                                text = "Dias: ${item.diasReserva.joinToString(", ")}",
+                                color = GreenPrimary,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(text = "Código: ${pedido.codigoRetirada}", color = Color.Gray, fontSize = 12.sp)
             }
             Text(text = "R$ ${String.format("%.2f", pedido.total)}", fontWeight = FontWeight.Bold, color = DarkText)

@@ -38,13 +38,15 @@ fun AppNavGraph(start: String = "welcome") {
         composable("settings") { SettingsScreen(navController) }
         composable("canteen_settings") { SettingsScreen(navController) }
 
-        composable("homeAluno") { DailyMenuScreen(navController, vm = cardapioVm) }
+        // Rota principal unificada para Alunos/Responsáveis
+        composable("dailyMenu") { DailyMenuScreen(navController, vm = cardapioVm) }
+        
+        // Rota principal para Cantina
         composable("homeCantina") { CanteenDashboardScreen(navController) }
+        
         composable("view_orders") { ViewOrdersScreen(navController) }
         composable("manage_menu") { ManageMenuScreen(navController, vm = cardapioVm) }
         composable("create_menu") { CreateMenuScreen(navController, vm = cardapioVm) }
-        composable("dailyMenu") { DailyMenuScreen(navController, vm = cardapioVm) }
-
 
         composable("advanceOrder") { AdvanceOrderScreen(navController, vm = cardapioVm)  }
         composable("studentAccount") { StudentAccountScreen(navController) }
@@ -64,13 +66,11 @@ fun AppNavGraph(start: String = "welcome") {
             )
         }
 
-
-
         composable(
-            route = "orderConfirmation/{itemName}/{itemPrice}", // Rota com parâmetros
+            route = "orderConfirmation/{itemName}/{itemPrice}",
             arguments = listOf(
                 navArgument("itemName") { type = NavType.StringType },
-                navArgument("itemPrice") { type = NavType.FloatType } // Float para simplificar na URL
+                navArgument("itemPrice") { type = NavType.FloatType }
             )
         ) { backStackEntry ->
             val name = backStackEntry.arguments?.getString("itemName") ?: "Item"
@@ -78,6 +78,7 @@ fun AppNavGraph(start: String = "welcome") {
 
             OrderConfirmationScreen(navController, itemName = name, itemPrice = price)
         }
+        
         composable("carrinho") {
             val uid = FirebaseAuth.getInstance().currentUser?.uid ?: ""
             CarrinhoScreen(navController, usuarioId = uid, vm = carrinhoVm)
@@ -88,9 +89,8 @@ fun AppNavGraph(start: String = "welcome") {
             PedidoConfirmadoScreen(navController, pedidoId)
         }
 
-//        Rota dos pais
-        composable("myDependents") {MyDependentsScreen((navController))}
-        composable("addCredit") {AddCreditScreen(navController)}
+        composable("myDependents") { MyDependentsScreen(navController) }
+        composable("addCredit") { AddCreditScreen(navController) }
         composable("purchaseStatement") { PurchaseStatementScreen(navController) }
         composable("parentAccount") { ParentAccountScreen(navController) }
         composable("rechargeSuccess") { RechargeSuccessScreen(navController) }
