@@ -98,6 +98,19 @@ class ItemCardapioRepository(
         Result.failure(e)
     }
 
+    suspend fun listarDisponiveisHoje(diaSemana: String): Result<List<ItemCardapio>> = try {
+        val snapshot = itens
+            .whereEqualTo("disponivel", true)
+            .whereArrayContains("diasDisponiveis", diaSemana) // ex: "MONDAY"
+            .get()
+            .await()
+
+        Result.success(snapshot.toObjects(ItemCardapio::class.java))
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+
     // Validação completa
     private fun validarItem(item: ItemCardapio) {
         require(item.nome.isNotBlank()) { "Nome obrigatório" }

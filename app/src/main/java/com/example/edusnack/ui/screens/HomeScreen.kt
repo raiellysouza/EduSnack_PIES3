@@ -22,6 +22,8 @@ import com.example.edusnack.model.Cardapio
 import com.example.edusnack.ui.components.BottomNavBar
 import com.example.edusnack.viewmodel.CardapioViewModel
 import com.example.edusnack.viewmodel.CarrinhoViewModel
+import java.time.LocalDate
+
 
 @Composable
 fun HomeScreen(nav: NavController, cardapioVm: CardapioViewModel, carrinhoVm: CarrinhoViewModel) {
@@ -30,9 +32,13 @@ fun HomeScreen(nav: NavController, cardapioVm: CardapioViewModel, carrinhoVm: Ca
     
     var selectedCategory by remember { mutableStateOf<String?>(null) }
 
-    val itensExibidos = remember(itens, selectedCategory) {
-        if (selectedCategory == null) itens else itens.filter { it.categoria == selectedCategory }
+    val hoje = remember { LocalDate.now().dayOfWeek.name }
+
+    val itensExibidos = remember(itens, selectedCategory, hoje) {
+        val base = if (selectedCategory == null) itens else itens.filter { it.categoria == selectedCategory }
+        base.filter { it.diasDisponiveis.isEmpty() || it.diasDisponiveis.contains(hoje) }
     }
+
 
     Scaffold(bottomBar = { BottomNavBar(nav) }) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 24.dp)) {
