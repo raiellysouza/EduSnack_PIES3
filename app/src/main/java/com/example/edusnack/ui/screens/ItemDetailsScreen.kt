@@ -1,6 +1,7 @@
 package com.example.edusnack.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -37,6 +38,10 @@ fun ItemDetailsScreen(
     carrinhoVm: CarrinhoViewModel
 ) {
     val item by cardapioVm.itemSelecionado.collectAsState()
+    
+    // Estado para os dias da semana selecionados
+    val diasSemana = listOf("Seg", "Ter", "Qua", "Qui", "Sex")
+    val selecionados = remember { mutableStateListOf<String>() }
 
     // Busca real quando entra na tela
     LaunchedEffect(itemId) {
@@ -137,10 +142,50 @@ fun ItemDetailsScreen(
             HorizontalDivider(color = Color(0xFFF5F5F5), thickness = 1.dp)
             Spacer(modifier = Modifier.height(16.dp))
 
+            // --- Seleção de Dias da Semana ---
+            Text(
+                text = "Quais dias você quer reservar?",
+                color = DetailsLabelGreen,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                diasSemana.forEach { dia ->
+                    val isSelected = selecionados.contains(dia)
+                    Box(
+                        modifier = Modifier
+                            .size(56.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(if (isSelected) DetailsBrightGreenButton else Color(0xFFF5F5F5))
+                            .clickable { 
+                                if (isSelected) selecionados.remove(dia) else selecionados.add(dia)
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = dia,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isSelected) Color.Black else Color.Gray,
+                            fontSize = 13.sp
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+            HorizontalDivider(color = Color(0xFFF5F5F5), thickness = 1.dp)
+            Spacer(modifier = Modifier.height(16.dp))
+
             Row(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Preço",
+                        text = "Preço Unitário",
                         color = DetailsLabelGreen,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium
@@ -156,55 +201,46 @@ fun ItemDetailsScreen(
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Categoria",
+                        text = "Total Semanal",
                         color = DetailsLabelGreen,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium
                     )
                     Spacer(modifier = Modifier.height(4.dp))
+                    val total = (i.preco ?: 0.0) * selecionados.size
                     Text(
-                        text = i.categoria,
+                        text = "R$ %.2f".format(total).replace('.', ','),
                         color = Color.Black,
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-            HorizontalDivider(color = Color(0xFFF5F5F5), thickness = 1.dp)
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = "Restrições",
-                color = DetailsLabelGreen,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = restricoesTexto(i),
-                color = Color.Black,
-                fontSize = 16.sp
-            )
 
             Spacer(modifier = Modifier.height(32.dp))
 
             Button(
                 onClick = {
-                    carrinhoVm.adicionar(i)
-                    nav.navigate("carrinho")
+                    if (selecionados.isNotEmpty()) {
+                        // CORREÇÃO: Passando a lista de dias selecionados para o carrinho
+                        carrinhoVm.adicionar(i, selecionados.toList()) 
+                        nav.navigate("carrinho")
+                    }
                 },
+                enabled = selecionados.isNotEmpty(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
                 shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = DetailsBrightGreenButton),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = DetailsBrightGreenButton,
+                    disabledContainerColor = Color.LightGray
+                ),
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
             ) {
                 Text(
-                    text = "Adicionar ao Carrinho",
-                    color = Color.Black,
+                    text = if (selecionados.isEmpty()) "Selecione os dias" else "Confirmar Pedido",
+                    color = if (selecionados.isEmpty()) Color.Gray else Color.Black,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp
                 )
@@ -213,13 +249,4 @@ fun ItemDetailsScreen(
             Spacer(modifier = Modifier.height(32.dp))
         }
     }
-}
-
-private fun restricoesTexto(i: Cardapio): String {
-    val list = buildList {
-        if (!i.possuiLactose) add("Sem lactose")
-        if (!i.possuiGluten) add("Sem glúten")
-        if (i.vegano) add("Vegano") else if (i.vegetariano) add("Vegetariano")
-    }
-    return if (list.isEmpty()) "Nenhuma" else list.joinToString(", ")
 }

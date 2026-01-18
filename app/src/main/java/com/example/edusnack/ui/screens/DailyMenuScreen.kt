@@ -43,14 +43,11 @@ data class MenuItemData(
 
 @Composable
 fun DailyMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
-    var selectedTab by remember { mutableIntStateOf(1) } // começa no Almoço
+    val tabs = listOf("Salgados", "Bebidas", "Bolos", "Lanches")
+    var selectedTab by remember { mutableIntStateOf(0) } 
     val itens by vm.itens.collectAsState()
 
-    val categoriaSelecionada = when (selectedTab) {
-        0 -> "Café da Manhã"
-        1 -> "Almoço"
-        else -> "Lanches"
-    }
+    val categoriaSelecionada = tabs[selectedTab]
 
     val hoje = remember { LocalDate.now().dayOfWeek.name } // "MONDAY", "TUESDAY", ...
 
@@ -84,9 +81,11 @@ fun DailyMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    MenuTabItem("Café da Manhã", selected = selectedTab == 0) { selectedTab = 0 }
-                    MenuTabItem("Almoço", selected = selectedTab == 1) { selectedTab = 1 }
-                    MenuTabItem("Lanches", selected = selectedTab == 2) { selectedTab = 2 }
+                    tabs.forEachIndexed { index, title ->
+                        MenuTabItem(title, selected = selectedTab == index) { 
+                            selectedTab = index 
+                        }
+                    }
                 }
 
                 HorizontalDivider(color = Color(0xFFF5F5F5), thickness = 2.dp)

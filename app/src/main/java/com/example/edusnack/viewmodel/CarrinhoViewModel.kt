@@ -20,12 +20,12 @@ class CarrinhoViewModel(
     private val _itens = MutableStateFlow<List<CarrinhoItem>>(emptyList())
     val itens = _itens.asStateFlow()
 
-    fun adicionar(item: Cardapio) {
+    fun adicionar(item: Cardapio, dias: List<String> = emptyList()) {
         val atual = _itens.value
-        val idx = atual.indexOfFirst { it.item.id == item.id }
+        val idx = atual.indexOfFirst { it.item.id == item.id && it.diasReserva == dias }
 
         _itens.value = if (idx == -1) {
-            atual + CarrinhoItem(item, quantidade = 1)
+            atual + CarrinhoItem(item, quantidade = 1, diasReserva = dias)
         } else {
             atual.mapIndexed { i, ci ->
                 if (i == idx) ci.copy(quantidade = ci.quantidade + 1) else ci
@@ -48,7 +48,6 @@ class CarrinhoViewModel(
         }
     }
 
-
     fun total(): Double = _itens.value.sumOf { it.subtotal() }
 
     fun limpar() { _itens.value = emptyList() }
@@ -61,33 +60,39 @@ class CarrinhoViewModel(
                     return@launch
                 }
 
-                val itensPedido = _itens.value.map { ci ->
-                    ItemPedido(
-                        itemId = ci.item.id,
-                        nome = ci.item.nome,
-                        preco = ci.item.preco, // Cardapio.preco é Double
-                        quantidade = ci.quantidade,
-                        preparoNaHora = false
-                    )
+                var ultimoId: String? = null
+
+                // CORREÇÃO: Para cada item e cada dia selecionado, criamos um pedido individual
+                _itens.value.forEach { ci ->
+                    val diasParaProcessar = if (ci.diasReserva.isEmpty()) listOf("") else ci.diasReserva
+                    
+                    diasParaProcessar.forEach { dia ->
+                        val itemPedido = ItemPedido(
+                            itemId = ci.item.id,
+                            nome = ci.item.nome,
+                            preco = ci.item.preco,
+                            quantidade = 1,
+                            preparoNaHora = false,
+                            diasReserva = if (dia.isEmpty()) emptyList() else listOf(dia)
+                        )
+
+                        val pedido = Pedido(
+                            alunoId = usuarioId,
+                            alunoNome = "", // Preenchido pelo back ou em outra etapa
+                            turma = "",      
+                            itens = listOf(itemPedido),
+                            status = StatusPedido.PENDENTE,
+                            total = ci.item.preco ?: 0.0, // Valor individual por dia
+                            codigoRetirada = gerarCodigoRetirada()
+                        )
+
+                        val res = pedidoRepo.salvarPedido(pedido)
+                        ultimoId = res.getOrNull()
+                    }
                 }
-                val total = itensPedido.sumOf { it.preco?.times(it.quantidade) ?: 0.0 }
 
-                val pedido = Pedido(
-                    alunoId = usuarioId,
-                    alunoNome = "",  // depois a gente puxa do profile
-                    turma = "",      // depois a gente puxa do profile
-                    itens = itensPedido,
-                    status = StatusPedido.PENDENTE,
-                    total = total,
-                    codigoRetirada = gerarCodigoRetirada()
-                )
-
-                val res = pedidoRepo.salvarPedido(pedido)
-                val id = res.getOrNull()
-
-                if (id != null) limpar()
-
-                onDone(id)
+                limpar()
+                onDone(ultimoId) // Retornamos o último ID para a tela de confirmação
             } catch (e: Exception) {
                 onDone(null)
             }
@@ -95,8 +100,6 @@ class CarrinhoViewModel(
     }
 
     private fun gerarCodigoRetirada(): String {
-        // 6 dígitos
         return (100000..999999).random(Random(System.currentTimeMillis())).toString()
     }
-
 }
