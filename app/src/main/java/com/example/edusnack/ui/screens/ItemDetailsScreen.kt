@@ -222,7 +222,8 @@ fun ItemDetailsScreen(
             Button(
                 onClick = {
                     if (selecionados.isNotEmpty()) {
-                        carrinhoVm.adicionar(i) 
+                        // CORREÇÃO: Passando a lista de dias selecionados para o carrinho
+                        carrinhoVm.adicionar(i, selecionados.toList()) 
                         nav.navigate("carrinho")
                     }
                 },

@@ -20,11 +20,8 @@ class CarrinhoViewModel(
     private val _itens = MutableStateFlow<List<CarrinhoItem>>(emptyList())
     val itens = _itens.asStateFlow()
 
-    // Atualizado para aceitar os dias de reserva
     fun adicionar(item: Cardapio, dias: List<String> = emptyList()) {
         val atual = _itens.value
-        // Se já existe o item com os MESMOS dias, aumenta a quantidade. 
-        // Se os dias forem diferentes, tratamos como um novo item no carrinho para não confundir.
         val idx = atual.indexOfFirst { it.item.id == item.id && it.diasReserva == dias }
 
         _itens.value = if (idx == -1) {
@@ -63,36 +60,39 @@ class CarrinhoViewModel(
                     return@launch
                 }
 
-                val itensPedido = _itens.value.map { ci ->
-                    ItemPedido(
-                        itemId = ci.item.id,
-                        nome = ci.item.nome,
-                        preco = ci.item.preco,
-                        quantidade = ci.quantidade,
-                        preparoNaHora = false,
-                        diasReserva = ci.diasReserva // PASSANDO OS DIAS PARA O PEDIDO REAL
-                    )
+                var ultimoId: String? = null
+
+                // CORREÇÃO: Para cada item e cada dia selecionado, criamos um pedido individual
+                _itens.value.forEach { ci ->
+                    val diasParaProcessar = if (ci.diasReserva.isEmpty()) listOf("") else ci.diasReserva
+                    
+                    diasParaProcessar.forEach { dia ->
+                        val itemPedido = ItemPedido(
+                            itemId = ci.item.id,
+                            nome = ci.item.nome,
+                            preco = ci.item.preco,
+                            quantidade = 1,
+                            preparoNaHora = false,
+                            diasReserva = if (dia.isEmpty()) emptyList() else listOf(dia)
+                        )
+
+                        val pedido = Pedido(
+                            alunoId = usuarioId,
+                            alunoNome = "", // Preenchido pelo back ou em outra etapa
+                            turma = "",      
+                            itens = listOf(itemPedido),
+                            status = StatusPedido.PENDENTE,
+                            total = ci.item.preco ?: 0.0, // Valor individual por dia
+                            codigoRetirada = gerarCodigoRetirada()
+                        )
+
+                        val res = pedidoRepo.salvarPedido(pedido)
+                        ultimoId = res.getOrNull()
+                    }
                 }
-                
-                // Cálculo do total considerando a quantidade de dias
-                val total = _itens.value.sumOf { it.subtotal() }
 
-                val pedido = Pedido(
-                    alunoId = usuarioId,
-                    alunoNome = "", 
-                    turma = "",      
-                    itens = itensPedido,
-                    status = StatusPedido.PENDENTE,
-                    total = total,
-                    codigoRetirada = gerarCodigoRetirada()
-                )
-
-                val res = pedidoRepo.salvarPedido(pedido)
-                val id = res.getOrNull()
-
-                if (id != null) limpar()
-
-                onDone(id)
+                limpar()
+                onDone(ultimoId) // Retornamos o último ID para a tela de confirmação
             } catch (e: Exception) {
                 onDone(null)
             }
