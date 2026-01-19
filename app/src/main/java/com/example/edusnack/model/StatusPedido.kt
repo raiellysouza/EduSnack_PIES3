@@ -7,5 +7,6 @@ enum class StatusPedido(val descricao: String) {
     PAGO("Pago"),
     PRONTO("Pronto"),
     ENTREGUE("Entregue"),
-    CANCELADO("Cancelado")
+    CANCELADO("Cancelado"),
+    PREPARANDO("Preparando")
 }

@@ -1,6 +1,5 @@
 package com.example.edusnack.ui.screens
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -25,7 +24,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import coil.compose.rememberAsyncImagePainter
 import com.example.edusnack.model.Cardapio
 import com.example.edusnack.ui.components.CanteenBottomNavBar
 import com.example.edusnack.ui.theme.DarkText
@@ -41,17 +39,26 @@ fun ManageMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
     val loading by vm.loading.collectAsState()
 
     var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("Cardápio do dia", "Cardápio semanal", "Histórico")
+    val tabs = listOf("Cardápio", "Histórico")
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
-                    Text("Gerenciar cardápio", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = DarkText)
+                    Text(
+                        "Gerenciar cardápio",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = DarkText
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = { nav.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar", tint = DarkText)
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Voltar",
+                            tint = DarkText
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.White)
@@ -65,6 +72,7 @@ fun ManageMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
                 .fillMaxSize()
                 .padding(padding)
         ) {
+
             TabRow(
                 selectedTabIndex = selectedTab,
                 containerColor = Color.White,
@@ -90,7 +98,7 @@ fun ManageMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
                                 fontSize = 14.sp
                             )
                         },
-                        selectedContentColor = Color(0xFF4CAF50),
+                        selectedContentColor = GreenPrimary,
                         unselectedContentColor = Color.Gray
                     )
                 }
@@ -98,9 +106,55 @@ fun ManageMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
 
             Box(modifier = Modifier.weight(1f)) {
                 if (loading) {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = GreenPrimary)
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center),
+                        color = GreenPrimary
+                    )
                 } else {
-                    if (selectedTab == 2) {
+                    // TAB 0 = CARDÁPIO FIXO
+                    if (selectedTab == 0) {
+                        if (menuItems.isEmpty()) {
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Text("Nenhum item no cardápio.", color = Color.Gray)
+                            }
+                        } else {
+                            LazyColumn(
+                                contentPadding = PaddingValues(
+                                    top = 16.dp,
+                                    bottom = 100.dp,
+                                    start = 24.dp,
+                                    end = 24.dp
+                                ),
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                items(menuItems) { item ->
+                                    MenuItemRow(item = item, onEditClick = { /* Editar */ })
+                                }
+                            }
+                        }
+
+                        Button(
+                            onClick = { nav.navigate("create_menu") },
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .fillMaxWidth()
+                                .padding(24.dp)
+                                .height(56.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = null, tint = DarkText)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                "Adicionar item ao cardápio",
+                                color = DarkText,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp
+                            )
+                        }
+                    }
+                    // TAB 1 = HISTÓRICO
+                    else {
                         Column {
                             Row(modifier = Modifier.padding(16.dp)) {
                                 FilterChip(label = "Data")
@@ -123,36 +177,6 @@ fun ManageMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
                                 }
                             }
                         }
-                    } else {
-                        if (menuItems.isEmpty()) {
-                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                Text("Nenhum item no cardápio.", color = Color.Gray)
-                            }
-                        } else {
-                            LazyColumn(
-                                contentPadding = PaddingValues(top = 16.dp, bottom = 100.dp, start = 24.dp, end = 24.dp),
-                                verticalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                items(menuItems) { item ->
-                                    MenuItemRow(item = item, onEditClick = { /* Editar */ })
-                                }
-                            }
-                        }
-
-                        Button(
-                            onClick = { nav.navigate("create_menu") },
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .fillMaxWidth()
-                                .padding(24.dp)
-                                .height(56.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Icon(Icons.Default.Add, contentDescription = null, tint = DarkText)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Adicionar item ao cardápio", color = DarkText, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                        }
                     }
                 }
             }
@@ -174,7 +198,6 @@ fun MenuItemRow(item: Cardapio, onEditClick: () -> Unit) {
                     .clip(RoundedCornerShape(12.dp))
                     .background(Color(0xFFF0F0F0))
             ) {
-                // CORREÇÃO: Usando AsyncImage com a URL real do item
                 if (!item.imagemUrl.isNullOrBlank()) {
                     AsyncImage(
                         model = item.imagemUrl,
@@ -191,7 +214,12 @@ fun MenuItemRow(item: Cardapio, onEditClick: () -> Unit) {
             Spacer(modifier = Modifier.width(16.dp))
             Column {
                 Text(item.nome, fontWeight = FontWeight.Medium, fontSize = 16.sp, color = DarkText)
-                Text("R$ ${String.format("%.2f", item.preco ?: 0.0)}", fontSize = 14.sp, color = Color(0xFF4CAF50), fontWeight = FontWeight.Medium)
+                Text(
+                    "R$ ${String.format("%.2f", item.preco ?: 0.0)}",
+                    fontSize = 14.sp,
+                    color = Color(0xFF4CAF50),
+                    fontWeight = FontWeight.Medium
+                )
             }
         }
         IconButton(onClick = onEditClick) {
@@ -209,7 +237,10 @@ fun HistoryItemRow(item: HistoryItem) {
     ) {
         Row(modifier = Modifier.weight(1f)) {
             Box(
-                modifier = Modifier.size(64.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFFF0F0F0))
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0xFFF0F0F0))
             ) {
                 AsyncImage(
                     model = item.imageUrl,
@@ -267,7 +298,12 @@ fun FilterChip(label: String) {
         ) {
             Text(label, fontSize = 13.sp, color = DarkText)
             Spacer(modifier = Modifier.width(4.dp))
-            Icon(Icons.Default.KeyboardArrowDown, contentDescription = null, modifier = Modifier.size(16.dp), tint = DarkText)
+            Icon(
+                Icons.Default.KeyboardArrowDown,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp),
+                tint = DarkText
+            )
         }
     }
 }

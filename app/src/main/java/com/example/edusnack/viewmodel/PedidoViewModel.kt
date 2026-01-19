@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.edusnack.model.Pedido
 import com.example.edusnack.model.StatusPedido
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,42 +24,34 @@ class PedidoViewModel(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
-    private val seriesList = listOf(
-        "6º Ano",
-        "7º Ano",
-        "8º Ano",
-        "9º Ano",
-        "1º Ensino Médio",
-        "2º Ensino Médio",
-        "3º Ensino Médio",
-        "Outros"
-    )
+    private val seriesList = buildList {
+        for (i in 1..9) add("${i}º Fundamental")
+        add("1º Ensino Médio")
+        add("2º Ensino Médio")
+        add("3º Ensino Médio")
+        add("Outros")
+    }
 
     init {
         subscribeToOrders()
     }
 
     private fun normalizeSeries(turma: String?): String {
-        val t = turma ?: ""
-        val num = t.takeWhile { it.isDigit() }.toIntOrNull()
-        return when {
-            num == 6 -> "6º Ano"
-            num == 7 -> "7º Ano"
-            num == 8 -> "8º Ano"
-            num == 9 -> "9º Ano"
-            num == 1 -> "1º Ensino Médio"
-            num == 2 -> "2º Ensino Médio"
-            num == 3 -> "3º Ensino Médio"
-            t.contains("Ensino Médio", ignoreCase = true) || t.contains("EM", ignoreCase = true) -> {
-                when {
-                    t.contains("1", ignoreCase = true) -> "1º Ensino Médio"
-                    t.contains("2", ignoreCase = true) -> "2º Ensino Médio"
-                    t.contains("3", ignoreCase = true) -> "3º Ensino Médio"
-                    else -> "1º Ensino Médio"
-                }
+        val t = (turma ?: "").trim()
+
+        if (t.contains("ensino médio", ignoreCase = true) || t.contains("EM", ignoreCase = true)) {
+            return when {
+                t.contains("1") -> "1º Ensino Médio"
+                t.contains("2") -> "2º Ensino Médio"
+                t.contains("3") -> "3º Ensino Médio"
+                else -> "1º Ensino Médio"
             }
-            else -> "Outros"
         }
+
+        val num = t.takeWhile { it.isDigit() }.toIntOrNull()
+        if (num != null && num in 1..9) return "${num}º Fundamental"
+
+        return "Outros"
     }
 
     private fun subscribeToOrders() {
@@ -70,21 +63,9 @@ class PedidoViewModel(
                 return@addSnapshotListener
             }
 
-            if (snap == null) {
-                _ordersBySeries.value = emptyMap()
-                _loading.value = false
-                return@addSnapshotListener
-            }
-
-            val pedidos = snap.documents.mapNotNull { doc ->
-                try {
-                    doc.toObject(Pedido::class.java)
-                } catch (e: Exception) {
-                    null
-                }
-            }.filter { pedido ->
-                pedido.status != StatusPedido.ENTREGUE
-            }
+            val pedidos = snap?.documents?.mapNotNull { doc ->
+                try { doc.toObject(Pedido::class.java) } catch (_: Exception) { null }
+            } ?: emptyList()
 
             val grouped = seriesList.associateWith { series ->
                 pedidos.filter { pedido -> normalizeSeries(pedido.turma) == series }
@@ -95,16 +76,51 @@ class PedidoViewModel(
         }
     }
 
-    fun markAsDelivered(orderId: String) {
+    fun updateStatus(orderId: String, status: StatusPedido) {
         viewModelScope.launch {
             try {
                 db.collection("pedidos")
                     .document(orderId)
-                    .update("status", StatusPedido.ENTREGUE.name)
+                    .update("status", status.name)
                     .await()
             } catch (e: Exception) {
                 _error.value = e.message
             }
         }
+    }
+
+    fun markAsDelivered(orderId: String) {
+        viewModelScope.launch {
+            try {
+                db.collection("pedidos")
+                    .document(orderId)
+                    .update(
+                        mapOf(
+                            "status" to StatusPedido.ENTREGUE.name,
+                            "entregueEm" to FieldValue.serverTimestamp()
+                        )
+                    )
+                    .await()
+            } catch (e: Exception) {
+                _error.value = e.message
+            }
+        }
+    }
+
+    fun cancelOrder(orderId: String) {
+        viewModelScope.launch {
+            try {
+                db.collection("pedidos")
+                    .document(orderId)
+                    .delete()
+                    .await()
+            } catch (e: Exception) {
+                _error.value = e.message
+            }
+        }
+    }
+
+    fun clearError() {
+        _error.value = null
     }
 }

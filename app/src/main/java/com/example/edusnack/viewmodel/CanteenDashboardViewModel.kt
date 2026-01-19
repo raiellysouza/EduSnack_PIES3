@@ -37,30 +37,37 @@ class CanteenDashboardViewModel(
     fun loadDashboardData() {
         viewModelScope.launch {
             _loading.value = true
-            
-            // Início do dia atual para filtros
+
             val calendar = Calendar.getInstance()
             calendar.set(Calendar.HOUR_OF_DAY, 0)
             calendar.set(Calendar.MINUTE, 0)
             calendar.set(Calendar.SECOND, 0)
+            calendar.set(Calendar.MILLISECOND, 0)
             val startOfDay = Timestamp(calendar.time)
 
-            // 1. Buscar Pedidos Pendentes e Prontos de HOJE
+            // 1) Contadores de pedidos do dia (criados hoje)
             db.collection("pedidos")
                 .whereGreaterThanOrEqualTo("data", startOfDay)
                 .addSnapshotListener { snapshot, _ ->
                     snapshot?.let {
                         val pedidos = it.toObjects(Pedido::class.java)
-                        
                         _pendingOrdersCount.value = pedidos.count { p -> p.status == StatusPedido.PENDENTE }
                         _readyOrdersCount.value = pedidos.count { p -> p.status == StatusPedido.PRONTO }
-                        
-                        // Soma total de vendas do dia (pedidos pagos/entregues/prontos)
-                        _totalSales.value = pedidos.sumOf { p -> p.total }
                     }
                 }
 
-            // 2. Buscar Cardápios Ativos
+            // 2) Total de vendas do dia (somente ENTREGUE hoje, baseado em entregueEm)
+            db.collection("pedidos")
+                .whereGreaterThanOrEqualTo("entregueEm", startOfDay)
+                .whereEqualTo("status", StatusPedido.ENTREGUE.name)
+                .addSnapshotListener { snapshot, _ ->
+                    snapshot?.let {
+                        val total = it.documents.sumOf { doc -> doc.getDouble("total") ?: 0.0 }
+                        _totalSales.value = total
+                    }
+                }
+
+            // 3) Cardápios ativos
             db.collection("cardapio")
                 .whereEqualTo("ativo", true)
                 .addSnapshotListener { snapshot, _ ->
@@ -70,4 +77,5 @@ class CanteenDashboardViewModel(
             _loading.value = false
         }
     }
+
 }
