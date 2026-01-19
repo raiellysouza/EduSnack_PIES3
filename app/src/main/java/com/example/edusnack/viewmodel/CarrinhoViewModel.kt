@@ -102,4 +102,5 @@ class CarrinhoViewModel(
     private fun gerarCodigoRetirada(): String {
         return (100000..999999).random(Random(System.currentTimeMillis())).toString()
     }
+
 }
