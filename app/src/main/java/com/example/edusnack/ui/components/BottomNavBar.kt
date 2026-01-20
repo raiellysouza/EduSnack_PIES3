@@ -10,10 +10,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Feedback
 
@@ -26,19 +26,15 @@ fun BottomNavBar(nav: NavController) {
             .padding(vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
-        BottomItem("Menu Diário", Icons.Filled.CalendarToday) {
+        BottomItem("Cardápio", Icons.Filled.CalendarToday) {
             nav.navigate("dailyMenu")
-        }
-
-        BottomItem("Antecipar", Icons.Filled.AccessTime) {
-            nav.navigate("advanceOrder")
         }
 
         BottomItem("Conta", Icons.Filled.Person) {
             nav.navigate("studentAccount")
         }
 
-        BottomItem("Informações", Icons.Filled.Feedback) {
+        BottomItem("Sobre", Icons.Filled.Feedback) {
             nav.navigate("canteenInfo")
         }
     }
@@ -54,8 +50,8 @@ private fun BottomItem(
         modifier = Modifier.clickable { onClick() },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Icon(icon, contentDescription = label)
+        Icon(icon, contentDescription = label, tint = Color.Black)
         Spacer(Modifier.height(4.dp))
-        Text(label)
+        Text(label, fontSize = 12.sp, color = Color.Black)
     }
 }
