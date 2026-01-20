@@ -7,10 +7,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,10 +26,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
+import com.example.edusnack.data.AuthRepository
 import com.example.edusnack.ui.components.BottomNavBar
 import com.example.edusnack.viewmodel.StudentAccountViewModel
 import com.example.edusnack.viewmodel.StudentTransaction
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StudentAccountScreen(nav: NavController, vm: StudentAccountViewModel = viewModel()) {
     val user by vm.user.collectAsState()
@@ -35,36 +39,68 @@ fun StudentAccountScreen(nav: NavController, vm: StudentAccountViewModel = viewM
     val transactions by vm.transactions.collectAsState()
     val loading by vm.loading.collectAsState()
 
+    var overflowExpanded by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
-            // Top Bar Personalizada
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White)
-                    .padding(horizontal = 16.dp, vertical = 16.dp)
-            ) {
-                // Botão Voltar
-                IconButton(
-                    onClick = { nav.popBackStack() },
-                    modifier = Modifier.align(Alignment.CenterStart)
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Voltar",
-                        tint = Color.Black
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        text = "Conta",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
                     )
-                }
+                },
+                navigationIcon = {
+                    IconButton(onClick = { nav.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Voltar",
+                            tint = Color.Black
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { overflowExpanded = true }) {
+                        Icon(imageVector = Icons.Default.MoreVert, contentDescription = "Mais")
+                    }
 
-                // Título Centralizado
-                Text(
-                    text = "Conta",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black,
-                    modifier = Modifier.align(Alignment.Center)
-                )
-            }
+                    DropdownMenu(
+                        expanded = overflowExpanded,
+                        onDismissRequest = { overflowExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Configurações") },
+                            onClick = {
+                                overflowExpanded = false
+                                nav.navigate("settings")
+                            },
+                            leadingIcon = { Icon(Icons.Default.Settings, contentDescription = null) }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Notificações") },
+                            onClick = {
+                                overflowExpanded = false
+                                // nav.navigate("notifications")
+                            },
+                            leadingIcon = { Icon(Icons.Default.Notifications, contentDescription = null) }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Logout") },
+                            onClick = {
+                                overflowExpanded = false
+                                AuthRepository().logout()
+                                nav.navigate("login") {
+                                    popUpTo("welcome") { inclusive = true }
+                                }
+                            },
+                            leadingIcon = { Icon(Icons.Default.Logout, contentDescription = null) }
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.White)
+            )
         },
         bottomBar = { BottomNavBar(nav) }
     ) { padding ->
