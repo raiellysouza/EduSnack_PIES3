@@ -1,12 +1,18 @@
 package com.example.edusnack.ui.screens
 
+import android.net.Uri
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Notifications
@@ -18,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -30,6 +37,10 @@ import com.example.edusnack.data.AuthRepository
 import com.example.edusnack.ui.components.BottomNavBar
 import com.example.edusnack.viewmodel.StudentAccountViewModel
 import com.example.edusnack.viewmodel.StudentTransaction
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,7 +50,36 @@ fun StudentAccountScreen(nav: NavController, vm: StudentAccountViewModel = viewM
     val transactions by vm.transactions.collectAsState()
     val loading by vm.loading.collectAsState()
 
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var uploading by remember { mutableStateOf(false) }
     var overflowExpanded by remember { mutableStateOf(false) }
+
+    // Launcher para escolher a foto diretamente desta tela
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            scope.launch {
+                uploading = true
+                try {
+                    val uid = user?.id ?: return@launch
+                    val ref = FirebaseStorage.getInstance().reference.child("perfis/$uid.jpg")
+                    ref.putFile(it).await()
+                    val url = ref.downloadUrl.await().toString()
+                    
+                    // Atualiza no banco
+                    FirebaseFirestore.getInstance().collection("usuarios").document(uid).update("fotoUrl", url).await()
+                    vm.loadData() // Recarrega os dados para atualizar a foto na tela
+                    Toast.makeText(context, "Foto atualizada!", Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    Toast.makeText(context, "Erro ao subir foto: ${e.message}", Toast.LENGTH_SHORT).show()
+                } finally {
+                    uploading = false
+                }
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -82,7 +122,6 @@ fun StudentAccountScreen(nav: NavController, vm: StudentAccountViewModel = viewM
                             text = { Text("Notificações") },
                             onClick = {
                                 overflowExpanded = false
-                                // nav.navigate("notifications")
                             },
                             leadingIcon = { Icon(Icons.Default.Notifications, contentDescription = null) }
                         )
@@ -120,15 +159,40 @@ fun StudentAccountScreen(nav: NavController, vm: StudentAccountViewModel = viewM
                 item {
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    AsyncImage(
-                        model = user?.fotoUrl ?: "https://placehold.co/200x200/FFCCBC/ffffff?text=${user?.nome?.take(2) ?: "AL"}",
-                        contentDescription = "Foto de perfil",
-                        contentScale = ContentScale.Crop,
+                    // --- FOTO CLICÁVEL ---
+                    Box(
                         modifier = Modifier
                             .size(120.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFFFFCCBC))
-                    )
+                            .background(Color(0xFFF5F5F5))
+                            .clickable { launcher.launch("image/*") },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (uploading) {
+                            CircularProgressIndicator(color = Color(0xFF4CAF50))
+                        } else {
+                            AsyncImage(
+                                model = user?.fotoUrl ?: "https://placehold.co/200x200/png?text=${user?.nome?.take(1) ?: "A"}",
+                                contentDescription = "Foto de perfil",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                            // Camada de ícone para indicar que é editável
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(Color.Black.copy(alpha = 0.1f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.CameraAlt,
+                                    contentDescription = "Trocar foto",
+                                    tint = Color.White.copy(alpha = 0.8f),
+                                    modifier = Modifier.size(32.dp)
+                                )
+                            }
+                        }
+                    }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
