@@ -48,7 +48,8 @@ fun AppNavGraph(start: String = "welcome") {
         composable("manage_menu") { ManageMenuScreen(navController, vm = cardapioVm) }
         composable("create_menu") { CreateMenuScreen(navController, vm = cardapioVm) }
 
-        composable("advanceOrder") { AdvanceOrderScreen(navController, vm = cardapioVm)  }
+        // REMOVIDO: advanceOrder - Funcionalidade agora integrada no dailyMenu
+        
         composable("studentAccount") { StudentAccountScreen(navController) }
         composable("canteenInfo") { CanteenInfoScreen(navController) }
         composable("canteen_profile") { CanteenProfileScreen(navController) }
