@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.edusnack.model.Pedido
 import com.example.edusnack.model.StatusPedido
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -107,18 +108,33 @@ class PedidoViewModel(
         }
     }
 
-    fun cancelOrder(orderId: String) {
+    fun cancelOrder(pedidoId: String) {
         viewModelScope.launch {
             try {
-                db.collection("pedidos")
-                    .document(orderId)
-                    .delete()
+                _loading.value = true
+                _error.value = null
+
+                FirebaseFirestore.getInstance()
+                    .collection("pedidos")
+                    .document(pedidoId)
+                    .update(
+                        mapOf(
+                            "status" to StatusPedido.CANCELADO.name,
+                            "canceladoEm" to Timestamp.now(),
+                            "canceladoPor" to "CANTINEIRO"
+                        )
+                    )
                     .await()
+
             } catch (e: Exception) {
-                _error.value = e.message
+                _error.value = "Erro ao cancelar pedido: ${e.message}"
+            } finally {
+                _loading.value = false
             }
         }
     }
+
+
 
     fun clearError() {
         _error.value = null
