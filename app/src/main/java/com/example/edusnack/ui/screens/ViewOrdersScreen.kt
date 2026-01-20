@@ -36,6 +36,7 @@ import com.google.firebase.Timestamp
 import java.util.Calendar
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.indication
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.ui.draw.shadow
 
 
@@ -47,9 +48,10 @@ fun ViewOrdersScreen(nav: NavController, vm: PedidoViewModel = viewModel()) {
     var selectedTimeTab by remember { mutableIntStateOf(0) }
     val timeTabs = listOf("Hoje", "Semana", "Todos")
 
-    // 0: Pendentes, 1: Preparando, 2: Prontos, 3: Entregues
+    // 0: Pendentes, 1: Preparando, 2: Prontos, 3: Entregues, 4: Cancelados
     var selectedStatusTab by remember { mutableIntStateOf(0) }
-    val statusTabs = listOf("Pendentes", "Preparando", "Prontos", "Entregues")
+    val statusTabs = listOf("Pendentes", "Preparando", "Prontos", "Entregues", "Cancelados")
+
 
     var searchText by remember { mutableStateOf("") }
     val query = searchText.trim().lowercase()
@@ -65,8 +67,10 @@ fun ViewOrdersScreen(nav: NavController, vm: PedidoViewModel = viewModel()) {
         0 -> StatusPedido.PENDENTE
         1 -> StatusPedido.PREPARANDO
         2 -> StatusPedido.PRONTO
-        else -> StatusPedido.ENTREGUE
+        3 -> StatusPedido.ENTREGUE
+        else -> StatusPedido.CANCELADO
     }
+
 
     fun timeFilterOK(p: Pedido): Boolean {
         if (selectedTimeTab == 2) return true // Todos
@@ -163,13 +167,14 @@ fun ViewOrdersScreen(nav: NavController, vm: PedidoViewModel = viewModel()) {
             Spacer(modifier = Modifier.height(16.dp))
 
             // --- ABAS DE STATUS ---
-            Row(
+            LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                statusTabs.forEachIndexed { idx, label ->
+                items(statusTabs.size) { idx ->
+                    val label = statusTabs[idx]
                     val isSelected = idx == selectedStatusTab
                     Text(
                         text = label,
@@ -180,6 +185,7 @@ fun ViewOrdersScreen(nav: NavController, vm: PedidoViewModel = viewModel()) {
                     )
                 }
             }
+
 
             Spacer(modifier = Modifier.height(16.dp))
 
