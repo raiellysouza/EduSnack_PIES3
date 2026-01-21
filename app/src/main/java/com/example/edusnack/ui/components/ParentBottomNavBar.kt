@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -32,16 +32,16 @@ fun ParentBottomNavBar(nav: NavController) {
             nav.navigate("parentAccount")
         }
 
-        ParentBottomItem("Dependentes", Icons.Default.People) {
-            nav.navigate("myDependents")
+        ParentBottomItem("Créditos", Icons.Default.Payments) {
+            nav.navigate("addCredit")
+        }
+
+        ParentBottomItem("Conta", Icons.Default.Person) {
+            nav.navigate("parentAccount") // Ou uma tela de perfil do pai se existir
         }
 
         ParentBottomItem("Extrato", Icons.Default.History) {
             nav.navigate("purchaseStatement")
-        }
-
-        ParentBottomItem("Config", Icons.Default.Person) {
-            nav.navigate("settings")
         }
     }
 }

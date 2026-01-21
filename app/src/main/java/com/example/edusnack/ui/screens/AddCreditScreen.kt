@@ -1,5 +1,6 @@
 package com.example.edusnack.ui.screens
 
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -20,7 +21,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.edusnack.model.Aluno
-import com.example.edusnack.ui.components.BottomNavBar
+import com.example.edusnack.ui.components.ParentBottomNavBar
 import com.example.edusnack.viewmodel.CreditViewModel
 
 val InputBackground = Color(0xFFE8F5E9)
@@ -46,39 +47,37 @@ fun AddCreditScreen(nav: NavController, vm: CreditViewModel = viewModel()) {
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White)
-                    .padding(16.dp)
-            ) {
-                IconButton(
-                    onClick = { nav.popBackStack() },
-                    modifier = Modifier.align(Alignment.CenterStart)
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Voltar",
-                        tint = Color.Black
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        text = "Adicionar Crédito",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
-                }
-                Text(
-                    text = "Adicionar Crédito",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black,
-                    modifier = Modifier.align(Alignment.Center)
+                },
+                navigationIcon = {
+                    IconButton(onClick = { nav.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Voltar",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
-            }
+            )
         },
-        bottomBar = { BottomNavBar(nav) }
+        bottomBar = { ParentBottomNavBar(nav) }
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(Color.White)
                 .padding(horizontal = 24.dp)
         ) {
             Spacer(modifier = Modifier.height(24.dp))
@@ -87,11 +86,10 @@ fun AddCreditScreen(nav: NavController, vm: CreditViewModel = viewModel()) {
                 text = "Selecione o Aluno",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black,
+                color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
-            // Dropdown real para selecionar aluno
             ExposedDropdownMenuBox(
                 expanded = expanded,
                 onExpandedChange = { expanded = !expanded }
@@ -102,9 +100,10 @@ fun AddCreditScreen(nav: NavController, vm: CreditViewModel = viewModel()) {
                     readOnly = true,
                     modifier = Modifier.menuAnchor().fillMaxWidth(),
                     colors = TextFieldDefaults.colors(
-                        focusedContainerColor = InputBackground,
-                        unfocusedContainerColor = InputBackground,
-                        disabledContainerColor = InputBackground,
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                     ),
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }
                 )
@@ -130,7 +129,7 @@ fun AddCreditScreen(nav: NavController, vm: CreditViewModel = viewModel()) {
                 text = "Valor a Adicionar",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black,
+                color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
@@ -138,7 +137,7 @@ fun AddCreditScreen(nav: NavController, vm: CreditViewModel = viewModel()) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
-                    .background(InputBackground, RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp))
                     .padding(horizontal = 16.dp),
                 contentAlignment = Alignment.CenterStart
             ) {
@@ -165,7 +164,7 @@ fun AddCreditScreen(nav: NavController, vm: CreditViewModel = viewModel()) {
                 text = "Método de Pagamento",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black,
+                color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
@@ -173,8 +172,8 @@ fun AddCreditScreen(nav: NavController, vm: CreditViewModel = viewModel()) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
-                    .border(1.dp, InputBackground, RoundedCornerShape(8.dp))
-                    .background(Color.White, RoundedCornerShape(8.dp))
+                    .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(8.dp))
                     .padding(horizontal = 16.dp)
             ) {
                 Row(
@@ -182,7 +181,7 @@ fun AddCreditScreen(nav: NavController, vm: CreditViewModel = viewModel()) {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(text = "Pix", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                    Text(text = "Pix", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                     Icon(imageVector = Icons.Default.RadioButtonChecked, contentDescription = "Selecionado", tint = PrimaryGreen, modifier = Modifier.size(24.dp))
                 }
             }
@@ -218,10 +217,10 @@ fun QuickAmountChip(label: String, onClick: () -> Unit) {
             .width(70.dp)
             .height(36.dp)
             .clip(RoundedCornerShape(8.dp))
-            .background(InputBackground)
+            .background(MaterialTheme.colorScheme.surfaceVariant)
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
-        Text(text = label, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+        Text(text = label, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

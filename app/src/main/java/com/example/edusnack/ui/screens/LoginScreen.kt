@@ -21,8 +21,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.ExperimentalMaterial3Api
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,18 +29,17 @@ fun LoginScreen(nav: NavController, vm: AuthViewModel = viewModel()) {
     var email by remember { mutableStateOf("") }
     var pass by remember { mutableStateOf("") }
     var passVisible by remember { mutableStateOf(false) }
-    // O estado inicial é "aluno"
     var tipo by remember { mutableStateOf("aluno") }
 
     val loading by vm.loading.collectAsState()
     val error by vm.error.collectAsState()
     val success by vm.success.collectAsState()
 
-    // Navigation after success handled by viewModel state
     if (success) {
+        // CORREÇÃO: Redirecionando o responsável para a tela de dependentes conforme solicitado
         val destino = when (tipo) {
             "cantina" -> "homeCantina"
-            "responsavel" -> "myDependents"
+            "responsavel" -> "myDependents" // Tela inicial desejada para adicionar filhos
             else -> "dailyMenu"
         }
 
@@ -53,21 +50,23 @@ fun LoginScreen(nav: NavController, vm: AuthViewModel = viewModel()) {
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Entrar", style = MaterialTheme.typography.titleMedium) },
+                title = { Text("Entrar", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface) },
                 navigationIcon = {
                     IconButton(onClick = { nav.popBackStack() }) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Voltar")
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "Voltar", tint = MaterialTheme.colorScheme.onSurface)
                     }
-                }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
             )
         }
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.White)
+                .background(MaterialTheme.colorScheme.background)
                 .padding(padding)
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -78,18 +77,19 @@ fun LoginScreen(nav: NavController, vm: AuthViewModel = viewModel()) {
             Text(
                 "Cafeteria Escolar",
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
             )
             Spacer(Modifier.height(12.dp))
             Text(
                 "Bem-vindo de volta!",
                 style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
             )
 
             Spacer(Modifier.height(24.dp))
 
-            // Campo de Email
             TextField(
                 value = email,
                 onValueChange = { email = it },
@@ -97,16 +97,15 @@ fun LoginScreen(nav: NavController, vm: AuthViewModel = viewModel()) {
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color(0xFFE9F2E8),
-                    unfocusedContainerColor = Color(0xFFE9F2E8),
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                 )
             )
 
             Spacer(Modifier.height(16.dp))
 
-            // Campo de Senha
             TextField(
                 value = pass,
                 onValueChange = { pass = it },
@@ -114,22 +113,25 @@ fun LoginScreen(nav: NavController, vm: AuthViewModel = viewModel()) {
                 visualTransformation = if (passVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
                     IconButton(onClick = { passVisible = !passVisible }) {
-                        Icon(imageVector = if (passVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility, contentDescription = "Alternar visibilidade")
+                        Icon(
+                            imageVector = if (passVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility, 
+                            contentDescription = "Alternar visibilidade",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color(0xFFE9F2E8),
-                    unfocusedContainerColor = Color(0xFFE9F2E8),
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                 )
             )
 
             Spacer(Modifier.height(20.dp))
 
-            // --- SELETOR DE TIPO DE USUÁRIO ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -145,7 +147,7 @@ fun LoginScreen(nav: NavController, vm: AuthViewModel = viewModel()) {
                         modifier = Modifier
                             .weight(1f)
                             .background(
-                                color = if (isSelected) Color(0xFF4CAF50) else Color(0xFFE9F2E8),
+                                color = if (isSelected) Color(0xFF4CAF50) else MaterialTheme.colorScheme.surfaceVariant,
                                 shape = RoundedCornerShape(12.dp)
                             )
                             .clickable { tipo = itemKey }
@@ -154,7 +156,7 @@ fun LoginScreen(nav: NavController, vm: AuthViewModel = viewModel()) {
                     ) {
                         Text(
                             text = item,
-                            color = if (isSelected) Color.White else Color.Black,
+                            color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                         )
                     }
@@ -173,7 +175,6 @@ fun LoginScreen(nav: NavController, vm: AuthViewModel = viewModel()) {
 
             Spacer(Modifier.height(24.dp))
 
-            // Botão Entrar
             Button(
                 onClick = { vm.login(email, pass, tipo) },
                 modifier = Modifier
@@ -185,25 +186,23 @@ fun LoginScreen(nav: NavController, vm: AuthViewModel = viewModel()) {
                 if (loading) {
                     CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
                 } else {
-                    Text("Entrar", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Text("Entrar", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
                 }
             }
 
             Spacer(Modifier.height(16.dp))
 
-            // Botão Criar Conta
             OutlinedButton(
                 onClick = { nav.navigate("register") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Black)
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onBackground)
             ) {
                 Text("Criar conta", fontWeight = FontWeight.Bold)
             }
 
-            // Mensagem de Erro
             error?.let { msg ->
                 Spacer(Modifier.height(16.dp))
                 Text(msg, color = MaterialTheme.colorScheme.error)
