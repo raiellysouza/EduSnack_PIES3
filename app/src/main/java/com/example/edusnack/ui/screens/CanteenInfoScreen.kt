@@ -11,8 +11,9 @@ import androidx.compose.material.icons.filled.Campaign
 import androidx.compose.material.icons.filled.Eco
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -23,11 +24,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.edusnack.network.Holiday
+import com.example.edusnack.network.HolidayRepository
 import com.example.edusnack.ui.components.BottomNavBar
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CanteenInfoScreen(nav: NavController) {
+    val holidayRepo = remember { HolidayRepository() }
+    var nextHoliday by remember { mutableStateOf<Holiday?>(null) }
+
+    LaunchedEffect(Unit) {
+        nextHoliday = holidayRepo.getNextHoliday()
+    }
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
@@ -63,6 +75,43 @@ fun CanteenInfoScreen(nav: NavController) {
                 .background(MaterialTheme.colorScheme.background)
                 .padding(horizontal = 24.dp)
         ) {
+
+            // --- AVISO DE FERIADO (Dinâmico) ---
+            nextHoliday?.let { holiday ->
+                item {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Warning,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            val dateFormatted = try {
+                                val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(holiday.date)
+                                SimpleDateFormat("dd/MM", Locale.getDefault()).format(date!!)
+                            } catch (e: Exception) { holiday.date }
+
+                            Text(
+                                text = "Atenção: Estaremos fechados no próximo feriado ($dateFormatted - ${holiday.name})",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        }
+                    }
+                }
+            }
 
             // --- SEÇÃO 1: Informações da Cantina ---
             item {
@@ -113,8 +162,8 @@ fun CanteenInfoScreen(nav: NavController) {
             item {
                 InfoItemRow(
                     icon = Icons.Filled.Event,
-                    title = "Fechamento de Feriado",
-                    description = "A cantina estará fechada em 4 de julho para o Dia da Independência."
+                    title = "Eventos Escolares",
+                    description = "Fique atento aos eventos especiais da escola este mês."
                 )
                 Spacer(modifier = Modifier.height(24.dp))
 
