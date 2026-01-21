@@ -3,11 +3,8 @@ package com.example.edusnack.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.edusnack.data.AuthRepository
-import com.example.edusnack.model.Aluno
 import com.example.edusnack.model.Pedido
 import com.example.edusnack.model.User
-import com.example.edusnack.repository.AlunoRepository
-import com.example.edusnack.repository.PedidoRepository
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,32 +21,19 @@ data class DependentUi(
 )
 
 class ParentViewModel(
-    private val authRepo: AuthRepository = AuthRepository(),
-    private val alunoRepo: AlunoRepository = AlunoRepository(),
-    private val pedidoRepo: PedidoRepository = PedidoRepository()
+    private val authRepo: AuthRepository = AuthRepository()
 ) : ViewModel() {
 
     private val _user = MutableStateFlow<User?>(null)
     val user: StateFlow<User?> = _user
 
-    // Mantém caso você ainda use em algum lugar
-    private val _children = MutableStateFlow<List<Aluno>>(emptyList())
-    val children: StateFlow<List<Aluno>> = _children
-
-    // IDs reais dos docs do Firestore (pra queries)
     private val _childrenIds = MutableStateFlow<List<String>>(emptyList())
 
-    // Lista pronta pra UI (nome/turma/saldo)
     private val _dependentsUi = MutableStateFlow<List<DependentUi>>(emptyList())
     val dependentsUi: StateFlow<List<DependentUi>> = _dependentsUi
 
-    // Conta (5 itens)
     private val _recentOrders = MutableStateFlow<List<Pedido>>(emptyList())
     val recentOrders: StateFlow<List<Pedido>> = _recentOrders
-
-    // Extrato (todos)
-    private val _allOrders = MutableStateFlow<List<Pedido>>(emptyList())
-    val allOrders: StateFlow<List<Pedido>> = _allOrders
 
     private val _loading = MutableStateFlow(false)
     val loading: StateFlow<Boolean> = _loading
@@ -71,88 +55,37 @@ class ParentViewModel(
                 return@launch
             }
 
-            // 1) carrega dependentes (e IDs)
-            fetchChildren(currentUser.id)
+            // 1) Carrega dependentes da coleção "usuarios" (onde o vínculo é salvo)
+            fetchChildrenFromUsuarios(currentUser.id)
 
-            // 2) com childrenIds definidos, carrega pedidos
+            // 2) Carrega pedidos recentes dos filhos
             fetchRecentOrders()
-            loadAllOrders()
 
             _loading.value = false
         }
     }
 
-    fun refreshOrders() {
-        viewModelScope.launch {
-            fetchRecentOrders()
-            loadAllOrders()
-        }
-    }
-
-    fun loadAllOrders() {
-        viewModelScope.launch {
-            try {
-                val childrenIds = _childrenIds.value
-                if (childrenIds.isEmpty()) {
-                    _allOrders.value = emptyList()
-                    return@launch
-                }
-
-                val snapshot = FirebaseFirestore.getInstance()
-                    .collection("pedidos")
-                    .whereIn("alunoId", childrenIds)
-                    .orderBy("data", Query.Direction.DESCENDING)
-                    .get()
-                    .await()
-
-                _allOrders.value = snapshot.toObjects(Pedido::class.java)
-            } catch (_: Exception) {
-                _allOrders.value = emptyList()
-            }
-        }
-    }
-
-    private suspend fun fetchChildren(parentId: String) {
+    private suspend fun fetchChildrenFromUsuarios(parentId: String) {
         try {
             val snapshot = FirebaseFirestore.getInstance()
-                .collection("alunos")
+                .collection("usuarios")
                 .whereEqualTo("responsavelId", parentId)
+                .whereEqualTo("tipo", "aluno")
                 .get()
                 .await()
 
-            // IDs reais do Firestore
             _childrenIds.value = snapshot.documents.map { it.id }
 
-            // objetos (se você ainda usa o model Aluno em algum lugar)
-            _children.value = snapshot.toObjects(Aluno::class.java)
-
-            // UI pronta (não depende do model Aluno ter "id", "saldo", etc)
             _dependentsUi.value = snapshot.documents.map { doc ->
-                val nome = doc.getString("nomeCompleto")
-                    ?: doc.getString("nome")
-                    ?: "Aluno"
-
-                val turma = doc.getString("anoOuTurma")
-                    ?: doc.getString("turma")
-                    ?: "-"
-
-                val saldo = doc.getDouble("saldo")
-                    ?: doc.getDouble("carteira")
-                    ?: 0.0
-
-                val fotoUrl = doc.getString("fotoUrl")
-                    ?: doc.getString("photoUrl")
-
                 DependentUi(
                     id = doc.id,
-                    nome = nome,
-                    turma = turma,
-                    saldo = saldo,
-                    fotoUrl = fotoUrl
+                    nome = doc.getString("nome") ?: "Aluno",
+                    turma = doc.getString("anoOuTurma") ?: doc.getString("turma") ?: "-",
+                    saldo = doc.getDouble("saldo") ?: 0.0,
+                    fotoUrl = doc.getString("fotoUrl")
                 )
             }
         } catch (_: Exception) {
-            _children.value = emptyList()
             _childrenIds.value = emptyList()
             _dependentsUi.value = emptyList()
         }
@@ -181,10 +114,8 @@ class ParentViewModel(
     }
 
     private fun clearAll() {
-        _children.value = emptyList()
         _childrenIds.value = emptyList()
         _dependentsUi.value = emptyList()
         _recentOrders.value = emptyList()
-        _allOrders.value = emptyList()
     }
 }

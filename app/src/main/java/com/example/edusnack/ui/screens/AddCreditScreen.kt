@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.edusnack.model.Aluno
+import com.example.edusnack.model.User
 import com.example.edusnack.ui.components.ParentBottomNavBar
 import com.example.edusnack.viewmodel.CreditViewModel
 
@@ -36,7 +36,7 @@ fun AddCreditScreen(nav: NavController, vm: CreditViewModel = viewModel()) {
     val loading by vm.loading.collectAsState()
     val success by vm.success.collectAsState()
 
-    var selectedChild by remember { mutableStateOf<Aluno?>(null) }
+    var selectedChild by remember { mutableStateOf<User?>(null) }
     var expanded by remember { mutableStateOf(false) }
 
     LaunchedEffect(success) {
@@ -59,7 +59,7 @@ fun AddCreditScreen(nav: NavController, vm: CreditViewModel = viewModel()) {
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { nav.popBackStack() }) {
+                    IconButton(onClick = { nav.navigate("myDependents") { popUpTo("myDependents") { inclusive = true } } }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Voltar",
@@ -95,7 +95,7 @@ fun AddCreditScreen(nav: NavController, vm: CreditViewModel = viewModel()) {
                 onExpandedChange = { expanded = !expanded }
             ) {
                 TextField(
-                    value = selectedChild?.nomeCompleto ?: "Selecione",
+                    value = selectedChild?.nome ?: "Selecione",
                     onValueChange = {},
                     readOnly = true,
                     modifier = Modifier.menuAnchor().fillMaxWidth(),
@@ -113,7 +113,7 @@ fun AddCreditScreen(nav: NavController, vm: CreditViewModel = viewModel()) {
                 ) {
                     children.forEach { child ->
                         DropdownMenuItem(
-                            text = { Text(child.nomeCompleto) },
+                            text = { Text(child.nome) },
                             onClick = {
                                 selectedChild = child
                                 expanded = false

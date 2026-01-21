@@ -6,7 +6,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountBalanceWallet
-import androidx.compose.material.icons.filled.Numbers // Ou Hashtag se disponível
+import androidx.compose.material.icons.filled.Numbers 
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -20,111 +20,103 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.edusnack.ui.components.BottomNavBar
+import com.example.edusnack.ui.components.ParentBottomNavBar
 
-// Reutilizando cores
-val SuccessBackgroundGreen = Color(0xFFE8F5E9) // Fundo dos cards e botão
-val AppGreenText = Color(0xFF4CAF50)
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RechargeSuccessScreen(nav: NavController) {
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White)
-                    .padding(16.dp)
-            ) {
-                IconButton(
-                    onClick = { nav.popBackStack() },
-                    modifier = Modifier.align(Alignment.CenterStart)
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Voltar",
-                        tint = Color.Black
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        text = "Recarga Confirmada",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
-                }
-                Text(
-                    text = "Recarga Confirmada",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black,
-                    modifier = Modifier.align(Alignment.Center)
+                },
+                navigationIcon = {
+                    IconButton(onClick = { nav.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Voltar",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
-            }
+            )
         },
-        bottomBar = { BottomNavBar(nav) }
+        bottomBar = { ParentBottomNavBar(nav) }
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(Color.White)
+                .background(MaterialTheme.colorScheme.background)
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Título de Sucesso
             Text(
                 text = "Recarga realizada com\nsucesso!",
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black,
+                color = MaterialTheme.colorScheme.onBackground,
                 textAlign = TextAlign.Center,
                 lineHeight = 30.sp
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Subtítulo
             Text(
-                text = "O valor de R$ 20,00 foi adicionado ao saldo de Lucas.",
+                text = "O valor foi adicionado ao saldo do aluno escolhido.",
                 fontSize = 16.sp,
-                color = Color.Black,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // Card 1: Saldo Atual
             SuccessInfoCard(
                 icon = Icons.Default.AccountBalanceWallet,
-                value = "R$ 55,00",
-                label = "Saldo atual"
+                value = "Saldo Atualizado",
+                label = "Verifique na conta do aluno"
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Card 2: Referência
             SuccessInfoCard(
-                icon = Icons.Default.Numbers, // Ícone genérico de número
-                value = "123456789",
-                label = "Referência"
+                icon = Icons.Default.Numbers,
+                value = "Referência Interna",
+                label = "Operação concluída via Firebase"
             )
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Botão Fazer Nova Recarga
             Button(
                 onClick = {
-                    // Volta para a tela de recarga (pop) ou limpa os campos
-                    nav.popBackStack()
+                    nav.navigate("parentAccount") {
+                        popUpTo("parentAccount") { inclusive = true }
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = SuccessBackgroundGreen
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
                 ),
                 elevation = ButtonDefaults.buttonElevation(0.dp)
             ) {
                 Text(
-                    text = "Fazer Nova Recarga",
-                    color = Color.Black,
+                    text = "Voltar ao Início",
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -135,7 +127,6 @@ fun RechargeSuccessScreen(nav: NavController) {
     }
 }
 
-// Componente para os Cards (Ícone + Texto)
 @Composable
 fun SuccessInfoCard(
     icon: ImageVector,
@@ -145,40 +136,32 @@ fun SuccessInfoCard(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(SuccessBackgroundGreen, RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Ícone
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = Color.Black,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(28.dp)
         )
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        // Textos
         Column {
             Text(
                 text = value,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
                 text = label,
                 fontSize = 14.sp,
-                color = AppGreenText,
+                color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Medium
             )
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun RechargeSuccessPreview() {
-    RechargeSuccessScreen(nav = rememberNavController())
 }
