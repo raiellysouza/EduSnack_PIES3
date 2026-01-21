@@ -39,7 +39,7 @@ import coil.compose.AsyncImage
 import com.example.edusnack.data.AuthRepository
 import com.example.edusnack.model.Aluno
 import com.example.edusnack.model.Pedido
-import com.example.edusnack.ui.components.ParentBottomNavBar
+import com.example.edusnack.ui.components.ParentBottomNavBar // IMPORT FORÇADO
 import com.example.edusnack.ui.theme.GreenPrimary
 import com.example.edusnack.viewmodel.ParentViewModel
 import com.google.firebase.firestore.FirebaseFirestore
@@ -142,7 +142,7 @@ fun ParentAccountScreen(nav: NavController, vm: ParentViewModel = viewModel()) {
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
             )
         },
-        bottomBar = { ParentBottomNavBar(nav) } // CORREÇÃO: Usando a barra do responsável
+        bottomBar = { ParentBottomNavBar(nav) } // CHAMADA FORÇADA
     ) { padding ->
         if (loading) {
             Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {

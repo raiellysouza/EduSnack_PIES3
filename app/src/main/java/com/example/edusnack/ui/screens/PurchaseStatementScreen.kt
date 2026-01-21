@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.edusnack.ui.components.BottomNavBar
+import com.example.edusnack.ui.components.ParentBottomNavBar
 import com.example.edusnack.ui.theme.GreenPrimary
 
 // Modelo de dados simples para as transações
@@ -70,7 +70,7 @@ fun PurchaseStatementScreen(nav: NavController) {
                 )
             )
         },
-        bottomBar = { BottomNavBar(nav) }
+        bottomBar = { ParentBottomNavBar(nav) }
     ) { padding ->
         Column(
             modifier = Modifier
