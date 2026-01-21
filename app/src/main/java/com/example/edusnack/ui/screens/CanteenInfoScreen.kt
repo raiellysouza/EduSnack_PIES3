@@ -25,39 +25,34 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.edusnack.ui.components.BottomNavBar
 
-// Cores usadas na tela
-val LightGreenBackground = Color(0xFFE8F5E9)
-val AppGreen = Color(0xFF4CAF50)
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CanteenInfoScreen(nav: NavController) {
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            // Header
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White)
-                    .padding(16.dp)
-            ) {
-                IconButton(
-                    onClick = { nav.popBackStack() },
-                    modifier = Modifier.align(Alignment.CenterStart)
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Voltar",
-                        tint = Color.Black
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        text = "Informações",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
-                }
-                Text(
-                    text = "Informações",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black,
-                    modifier = Modifier.align(Alignment.Center)
+                },
+                navigationIcon = {
+                    IconButton(onClick = { nav.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Voltar",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
-            }
+            )
         },
         bottomBar = { BottomNavBar(nav) }
     ) { padding ->
@@ -65,7 +60,7 @@ fun CanteenInfoScreen(nav: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(Color.White) // Fundo branco geral
+                .background(MaterialTheme.colorScheme.background)
                 .padding(horizontal = 24.dp)
         ) {
 
@@ -76,7 +71,7 @@ fun CanteenInfoScreen(nav: NavController) {
                     text = "Informações da Cantina",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black,
+                    color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(bottom = 20.dp)
                 )
             }
@@ -97,7 +92,7 @@ fun CanteenInfoScreen(nav: NavController) {
                 Spacer(modifier = Modifier.height(24.dp))
 
                 InfoItemRow(
-                    icon = Icons.Filled.Campaign, // Ícone de megafone/feedback
+                    icon = Icons.Filled.Campaign,
                     title = "Feedback",
                     description = "Para quaisquer dúvidas ou feedback, entre em contato com nossa equipe."
                 )
@@ -110,7 +105,7 @@ fun CanteenInfoScreen(nav: NavController) {
                     text = "Anúncios",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black,
+                    color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(bottom = 20.dp)
                 )
             }
@@ -124,19 +119,17 @@ fun CanteenInfoScreen(nav: NavController) {
                 Spacer(modifier = Modifier.height(24.dp))
 
                 InfoItemRow(
-                    icon = Icons.Filled.Eco, // Ícone de folha
+                    icon = Icons.Filled.Eco,
                     title = "Novos Itens do Cardápio",
                     description = "Agora oferecemos uma variedade de opções vegetarianas e veganas. Confira"
                 )
 
-                // Espaço extra no final
                 Spacer(modifier = Modifier.height(24.dp))
             }
         }
     }
 }
 
-// --- Componente Reutilizável para cada linha ---
 @Composable
 fun InfoItemRow(
     icon: ImageVector,
@@ -145,11 +138,10 @@ fun InfoItemRow(
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.Top // Alinha o ícone com o topo do texto
+        verticalAlignment = Alignment.Top
     ) {
-        // Caixa do Ícone (Verde Claro)
         Surface(
-            color = LightGreenBackground,
+            color = MaterialTheme.colorScheme.surfaceVariant,
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier.size(48.dp)
         ) {
@@ -157,7 +149,7 @@ fun InfoItemRow(
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = Color.Black, // Ícone preto
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -165,20 +157,19 @@ fun InfoItemRow(
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        // Textos
         Column {
             Text(
                 text = title,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black,
+                color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.padding(bottom = 4.dp)
             )
             Text(
                 text = description,
                 fontSize = 14.sp,
-                color = AppGreen, // Texto verde
-                lineHeight = 20.sp // Espaçamento entre linhas para melhor leitura
+                color = Color(0xFF4CAF50),
+                lineHeight = 20.sp
             )
         }
     }

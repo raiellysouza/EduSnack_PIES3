@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -22,7 +23,7 @@ fun BottomNavBar(nav: NavController) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.surface) // COR DO TEMA
             .padding(vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
@@ -50,8 +51,16 @@ private fun BottomItem(
         modifier = Modifier.clickable { onClick() },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Icon(icon, contentDescription = label, tint = Color.Black)
+        Icon(
+            icon, 
+            contentDescription = label, 
+            tint = MaterialTheme.colorScheme.onSurface // COR DO TEMA
+        )
         Spacer(Modifier.height(4.dp))
-        Text(label, fontSize = 12.sp, color = Color.Black)
+        Text(
+            label, 
+            fontSize = 12.sp, 
+            color = MaterialTheme.colorScheme.onSurface // COR DO TEMA
+        )
     }
 }

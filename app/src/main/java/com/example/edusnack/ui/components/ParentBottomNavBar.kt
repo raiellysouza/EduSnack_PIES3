@@ -4,10 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.Analytics
-import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material.icons.filled.ListAlt
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -21,24 +20,34 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 
 @Composable
-fun CanteenBottomNavBar(nav: NavController) {
+fun ParentBottomNavBar(nav: NavController) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface) // COR DO TEMA
+            .background(MaterialTheme.colorScheme.surface)
             .padding(vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
-        CanteenBottomItem("Início", Icons.AutoMirrored.Filled.List) { nav.navigate("homeCantina") }
-        CanteenBottomItem("Cardápio", Icons.Default.CalendarToday) { nav.navigate("manage_menu") }
-        CanteenBottomItem("Pedidos", Icons.Default.ListAlt) { nav.navigate("view_orders") }
-        CanteenBottomItem("Conta", Icons.Default.Person) { nav.navigate("canteen_settings") }
-        CanteenBottomItem("Relatórios", Icons.Default.Analytics) { /* nav.navigate("reports") */ }
+        ParentBottomItem("Início", Icons.Default.Home) {
+            nav.navigate("parentAccount")
+        }
+
+        ParentBottomItem("Dependentes", Icons.Default.People) {
+            nav.navigate("myDependents")
+        }
+
+        ParentBottomItem("Extrato", Icons.Default.History) {
+            nav.navigate("purchaseStatement")
+        }
+
+        ParentBottomItem("Config", Icons.Default.Person) {
+            nav.navigate("settings")
+        }
     }
 }
 
 @Composable
-private fun CanteenBottomItem(
+private fun ParentBottomItem(
     label: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     onClick: () -> Unit
@@ -50,14 +59,14 @@ private fun CanteenBottomItem(
         Icon(
             icon, 
             contentDescription = label, 
-            tint = MaterialTheme.colorScheme.onSurface, // COR DO TEMA
+            tint = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.size(24.dp)
         )
         Spacer(Modifier.height(4.dp))
         Text(
             label, 
             fontSize = 10.sp, 
-            color = MaterialTheme.colorScheme.onSurface // COR DO TEMA
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }

@@ -42,6 +42,7 @@ fun ManageMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
     val tabs = listOf("Cardápio", "Histórico")
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -49,7 +50,7 @@ fun ManageMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
                         "Gerenciar cardápio",
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp,
-                        color = DarkText
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 },
                 navigationIcon = {
@@ -57,15 +58,16 @@ fun ManageMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Voltar",
-                            tint = DarkText
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.White)
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
             )
         },
-        bottomBar = { CanteenBottomNavBar(nav) },
-        containerColor = Color.White
+        bottomBar = { CanteenBottomNavBar(nav) }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -75,7 +77,7 @@ fun ManageMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
 
             TabRow(
                 selectedTabIndex = selectedTab,
-                containerColor = Color.White,
+                containerColor = MaterialTheme.colorScheme.surface,
                 contentColor = GreenPrimary,
                 indicator = { tabPositions ->
                     if (selectedTab < tabPositions.size) {
@@ -85,7 +87,7 @@ fun ManageMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
                         )
                     }
                 },
-                divider = { HorizontalDivider(color = Color(0xFFF0F0F0)) }
+                divider = { HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant) }
             ) {
                 tabs.forEachIndexed { index, title ->
                     Tab(
@@ -99,7 +101,7 @@ fun ManageMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
                             )
                         },
                         selectedContentColor = GreenPrimary,
-                        unselectedContentColor = Color.Gray
+                        unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -111,11 +113,10 @@ fun ManageMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
                         color = GreenPrimary
                     )
                 } else {
-                    // TAB 0 = CARDÁPIO FIXO
                     if (selectedTab == 0) {
                         if (menuItems.isEmpty()) {
                             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                Text("Nenhum item no cardápio.", color = Color.Gray)
+                                Text("Nenhum item no cardápio.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                         } else {
                             LazyColumn(
@@ -143,17 +144,16 @@ fun ManageMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
                             colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Icon(Icons.Default.Add, contentDescription = null, tint = DarkText)
+                            Icon(Icons.Default.Add, contentDescription = null, tint = Color.Black)
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 "Adicionar item ao cardápio",
-                                color = DarkText,
+                                color = Color.Black,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp
                             )
                         }
                     }
-                    // TAB 1 = HISTÓRICO
                     else {
                         Column {
                             Row(modifier = Modifier.padding(16.dp)) {
@@ -164,7 +164,7 @@ fun ManageMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
 
                             if (historyItems.isEmpty()) {
                                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                    Text("Nenhum histórico encontrado.", color = Color.Gray)
+                                    Text("Nenhum histórico encontrado.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                             } else {
                                 LazyColumn(
@@ -196,7 +196,7 @@ fun MenuItemRow(item: Cardapio, onEditClick: () -> Unit) {
                 modifier = Modifier
                     .size(56.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFFF0F0F0))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 if (!item.imagemUrl.isNullOrBlank()) {
                     AsyncImage(
@@ -213,7 +213,7 @@ fun MenuItemRow(item: Cardapio, onEditClick: () -> Unit) {
             }
             Spacer(modifier = Modifier.width(16.dp))
             Column {
-                Text(item.nome, fontWeight = FontWeight.Medium, fontSize = 16.sp, color = DarkText)
+                Text(item.nome, fontWeight = FontWeight.Medium, fontSize = 16.sp, color = MaterialTheme.colorScheme.onBackground)
                 Text(
                     "R$ ${String.format("%.2f", item.preco ?: 0.0)}",
                     fontSize = 14.sp,
@@ -223,7 +223,7 @@ fun MenuItemRow(item: Cardapio, onEditClick: () -> Unit) {
             }
         }
         IconButton(onClick = onEditClick) {
-            Icon(Icons.Outlined.Edit, contentDescription = "Editar", tint = DarkText)
+            Icon(Icons.Outlined.Edit, contentDescription = "Editar", tint = MaterialTheme.colorScheme.onSurface)
         }
     }
 }
@@ -240,7 +240,7 @@ fun HistoryItemRow(item: HistoryItem) {
                 modifier = Modifier
                     .size(64.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFFF0F0F0))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 AsyncImage(
                     model = item.imageUrl,
@@ -257,7 +257,7 @@ fun HistoryItemRow(item: HistoryItem) {
                     text = item.name,
                     fontWeight = FontWeight.Medium,
                     fontSize = 16.sp,
-                    color = DarkText
+                    color = MaterialTheme.colorScheme.onBackground
                 )
                 Text(
                     text = item.actionText,
@@ -288,7 +288,7 @@ fun HistoryItemRow(item: HistoryItem) {
 @Composable
 fun FilterChip(label: String) {
     Surface(
-        color = Color(0xFFE9F2E8),
+        color = MaterialTheme.colorScheme.surfaceVariant,
         shape = RoundedCornerShape(8.dp),
         modifier = Modifier.height(32.dp)
     ) {
@@ -296,13 +296,13 @@ fun FilterChip(label: String) {
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(horizontal = 12.dp)
         ) {
-            Text(label, fontSize = 13.sp, color = DarkText)
+            Text(label, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(modifier = Modifier.width(4.dp))
             Icon(
                 Icons.Default.KeyboardArrowDown,
                 contentDescription = null,
                 modifier = Modifier.size(16.dp),
-                tint = DarkText
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

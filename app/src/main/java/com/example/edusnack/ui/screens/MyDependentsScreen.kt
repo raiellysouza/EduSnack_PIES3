@@ -33,9 +33,11 @@ import androidx.navigation.compose.rememberNavController
 import com.example.edusnack.data.AuthRepository
 import com.example.edusnack.model.User
 import com.example.edusnack.ui.components.BottomNavBar
+import com.example.edusnack.ui.theme.GreenPrimary
 import kotlinx.coroutines.launch
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyDependentsScreen(nav: NavController) {
     val context = LocalContext.current
@@ -51,38 +53,37 @@ fun MyDependentsScreen(nav: NavController) {
         isLoading = false
     }
 
-    val dependents by responsavelId?.let { id ->
-        authRepo.getDependentesByUser(id).collectAsState(initial = emptyList())
-    } ?: remember { mutableStateOf(emptyList<User>()) }
+    val dependents by if (responsavelId != null) {
+        authRepo.getDependentesByUser(responsavelId!!).collectAsState(initial = emptyList())
+    } else {
+        remember { mutableStateOf(emptyList<User>()) }
+    }
 
     var showAddDependentModal by remember { mutableStateOf(false) }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White)
-                    .padding(vertical = 24.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = "Meus Dependentes", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-            }
+            CenterAlignedTopAppBar(
+                title = { Text(text = "Meus Dependentes", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface) },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
+            )
         },
         bottomBar = { BottomNavBar(nav) }
     ) { padding ->
         if (isLoading) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = AppGreen)
+            Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = GreenPrimary)
             }
         } else {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .background(Color.White)
                     .padding(horizontal = 24.dp)
             ) {
+                item { Spacer(modifier = Modifier.height(24.dp)) }
+
                 items(dependents) { dependent ->
                     DependentUserItem(dependent)
                     Spacer(modifier = Modifier.height(24.dp))
@@ -95,10 +96,10 @@ fun MyDependentsScreen(nav: NavController) {
                 }
 
                 item { Spacer(modifier = Modifier.height(16.dp)) }
-                item { Text(text = "Opções", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.Black, modifier = Modifier.padding(bottom = 16.dp)) }
+                item { Text(text = "Opções", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground, modifier = Modifier.padding(bottom = 16.dp)) }
 
                 item {
-                    OptionItem(text = "Adicionar Fundos", icon = Icons.Default.Add, onClick = { })
+                    OptionItem(text = "Adicionar Fundos", icon = Icons.Default.Add, onClick = { nav.navigate("addCredit") })
                 }
                 item {
                     OptionItem(text = "Adicionar/Vincular Dependente", icon = Icons.Default.PersonAdd, onClick = { showAddDependentModal = true })
@@ -152,19 +153,23 @@ fun AddDependentChoiceDialog(
     var mode by remember { mutableStateOf("choice") } // choice, vincular, criar
 
     Dialog(onDismissRequest = onDismiss) {
-        Card(shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color.White), modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+        Card(
+            shape = RoundedCornerShape(16.dp), 
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), 
+            modifier = Modifier.fillMaxWidth().padding(16.dp)
+        ) {
             Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = "Adicionar Dependente", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                Text(text = "Adicionar Dependente", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                 Spacer(modifier = Modifier.height(16.dp))
 
                 when (mode) {
                     "choice" -> {
-                        Button(onClick = { mode = "vincular" }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = AppGreen)) {
-                            Text("Vincular por Matrícula")
+                        Button(onClick = { mode = "vincular" }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary)) {
+                            Text("Vincular por Matrícula", color = Color.Black)
                         }
                         Spacer(modifier = Modifier.height(8.dp))
-                        OutlinedButton(onClick = { mode = "criar" }, modifier = Modifier.fillMaxWidth()) {
-                            Text("Criar Novo Aluno", color = AppGreen)
+                        OutlinedButton(onClick = { mode = "criar" }, modifier = Modifier.fillMaxWidth(), border = ButtonDefaults.outlinedButtonBorder.copy(brush = androidx.compose.ui.graphics.SolidColor(GreenPrimary))) {
+                            Text("Criar Novo Aluno", color = GreenPrimary)
                         }
                     }
                     "vincular" -> {
@@ -173,7 +178,7 @@ fun AddDependentChoiceDialog(
                         Spacer(modifier = Modifier.height(16.dp))
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                             TextButton(onClick = { mode = "choice" }) { Text("Voltar") }
-                            Button(onClick = { onVincular(matricula) }, colors = ButtonDefaults.buttonColors(containerColor = AppGreen)) { Text("Vincular") }
+                            Button(onClick = { onVincular(matricula) }, colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary)) { Text("Vincular", color = Color.Black) }
                         }
                     }
                     "criar" -> {
@@ -190,7 +195,7 @@ fun AddDependentChoiceDialog(
                         Spacer(modifier = Modifier.height(16.dp))
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                             TextButton(onClick = { mode = "choice" }) { Text("Voltar") }
-                            Button(onClick = { onCriar(nome, email, senha, matricula) }, colors = ButtonDefaults.buttonColors(containerColor = AppGreen)) { Text("Criar") }
+                            Button(onClick = { onCriar(nome, email, senha, matricula) }, colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary)) { Text("Criar", color = Color.Black) }
                         }
                     }
                 }
@@ -207,13 +212,13 @@ fun OptionItem(text: String, icon: ImageVector, onClick: () -> Unit) {
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(modifier = Modifier.size(40.dp).background(LightGreenBackground, RoundedCornerShape(8.dp)), contentAlignment = Alignment.Center) {
-                Icon(imageVector = icon, contentDescription = null, tint = Color.Black)
+            Box(modifier = Modifier.size(40.dp).background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp)), contentAlignment = Alignment.Center) {
+                Icon(imageVector = icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Spacer(modifier = Modifier.width(16.dp))
-            Text(text = text, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+            Text(text = text, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
         }
-        Icon(imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = Color.Black)
+        Icon(imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onBackground)
     }
 }
 
@@ -225,8 +230,8 @@ fun DependentUserItem(user: User) {
         }
         Spacer(modifier = Modifier.width(16.dp))
         Column {
-            Text(text = user.nome, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-            Text(text = "Matrícula: ${user.matricula ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
+            Text(text = user.nome, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+            Text(text = "Matrícula: ${user.matricula ?: "N/A"}", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

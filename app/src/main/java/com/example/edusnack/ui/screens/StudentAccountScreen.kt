@@ -55,7 +55,6 @@ fun StudentAccountScreen(nav: NavController, vm: StudentAccountViewModel = viewM
     var uploading by remember { mutableStateOf(false) }
     var overflowExpanded by remember { mutableStateOf(false) }
 
-    // Launcher para escolher a foto diretamente desta tela
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -68,9 +67,8 @@ fun StudentAccountScreen(nav: NavController, vm: StudentAccountViewModel = viewM
                     ref.putFile(it).await()
                     val url = ref.downloadUrl.await().toString()
                     
-                    // Atualiza no banco
                     FirebaseFirestore.getInstance().collection("usuarios").document(uid).update("fotoUrl", url).await()
-                    vm.loadData() // Recarrega os dados para atualizar a foto na tela
+                    vm.loadData() 
                     Toast.makeText(context, "Foto atualizada!", Toast.LENGTH_SHORT).show()
                 } catch (e: Exception) {
                     Toast.makeText(context, "Erro ao subir foto: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -82,6 +80,7 @@ fun StudentAccountScreen(nav: NavController, vm: StudentAccountViewModel = viewM
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -89,7 +88,7 @@ fun StudentAccountScreen(nav: NavController, vm: StudentAccountViewModel = viewM
                         text = "Conta",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 },
                 navigationIcon = {
@@ -97,13 +96,17 @@ fun StudentAccountScreen(nav: NavController, vm: StudentAccountViewModel = viewM
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Voltar",
-                            tint = Color.Black
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 },
                 actions = {
                     IconButton(onClick = { overflowExpanded = true }) {
-                        Icon(imageVector = Icons.Default.MoreVert, contentDescription = "Mais")
+                        Icon(
+                            imageVector = Icons.Default.MoreVert, 
+                            contentDescription = "Mais",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
                     }
 
                     DropdownMenu(
@@ -138,38 +141,39 @@ fun StudentAccountScreen(nav: NavController, vm: StudentAccountViewModel = viewM
                         )
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.White)
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
             )
         },
         bottomBar = { BottomNavBar(nav) }
     ) { padding ->
         if (loading) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = Color(0xFF4CAF50))
+            Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
         } else {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .background(Color.White)
+                    .background(MaterialTheme.colorScheme.background)
                     .padding(horizontal = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 item {
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // --- FOTO CLICÁVEL ---
                     Box(
                         modifier = Modifier
                             .size(120.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFFF5F5F5))
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
                             .clickable { launcher.launch("image/*") },
                         contentAlignment = Alignment.Center
                     ) {
                         if (uploading) {
-                            CircularProgressIndicator(color = Color(0xFF4CAF50))
+                            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                         } else {
                             AsyncImage(
                                 model = user?.fotoUrl ?: "https://placehold.co/200x200/png?text=${user?.nome?.take(1) ?: "A"}",
@@ -177,7 +181,6 @@ fun StudentAccountScreen(nav: NavController, vm: StudentAccountViewModel = viewM
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier.fillMaxSize()
                             )
-                            // Camada de ícone para indicar que é editável
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -200,13 +203,13 @@ fun StudentAccountScreen(nav: NavController, vm: StudentAccountViewModel = viewM
                         text = user?.nome ?: "Nome não disponível",
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        color = MaterialTheme.colorScheme.onBackground
                     )
 
                     Text(
                         text = "Saldo: R$ ${String.format("%.2f", alunoInfo?.saldo ?: 0.0)}",
                         fontSize = 18.sp,
-                        color = Color(0xFF4CAF50),
+                        color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(top = 8.dp)
                     )
@@ -214,7 +217,7 @@ fun StudentAccountScreen(nav: NavController, vm: StudentAccountViewModel = viewM
                     Text(
                         text = "Turma: ${alunoInfo?.anoOuTurma ?: "Não informada"}",
                         fontSize = 14.sp,
-                        color = Color.Gray,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier.padding(top = 4.dp)
                     )
@@ -233,7 +236,7 @@ fun StudentAccountScreen(nav: NavController, vm: StudentAccountViewModel = viewM
                             text = "Histórico de Transações",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.Black
+                            color = MaterialTheme.colorScheme.onBackground
                         )
                     }
                 }
@@ -242,7 +245,7 @@ fun StudentAccountScreen(nav: NavController, vm: StudentAccountViewModel = viewM
                     item {
                         Text(
                             text = "Nenhuma transação encontrada.",
-                            color = Color.Gray,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 14.sp,
                             modifier = Modifier.padding(top = 20.dp)
                         )
@@ -253,7 +256,7 @@ fun StudentAccountScreen(nav: NavController, vm: StudentAccountViewModel = viewM
                         HorizontalDivider(
                             modifier = Modifier.padding(vertical = 12.dp),
                             thickness = 0.5.dp,
-                            color = Color(0xFFEEEEEE)
+                            color = MaterialTheme.colorScheme.outlineVariant
                         )
                     }
                 }
@@ -276,13 +279,13 @@ fun TransactionItem(transaction: StudentTransaction) {
                 text = "${transaction.title} - ${transaction.date}",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.Black
+                color = MaterialTheme.colorScheme.onBackground
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = transaction.type,
                 fontSize = 14.sp,
-                color = Color(0xFF4CAF50),
+                color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Medium
             )
         }
@@ -294,13 +297,7 @@ fun TransactionItem(transaction: StudentTransaction) {
             text = "$sign$formattedPrice",
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
-            color = if (transaction.amount > 0) Color(0xFF4CAF50) else Color.Black
+            color = if (transaction.amount > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground
         )
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun StudentAccountScreenPreview() {
-    StudentAccountScreen(nav = rememberNavController())
 }

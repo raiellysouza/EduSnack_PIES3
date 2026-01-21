@@ -23,8 +23,6 @@ import coil.compose.AsyncImage
 import com.example.edusnack.model.Cardapio
 import com.example.edusnack.ui.components.BottomNavBar
 import com.example.edusnack.viewmodel.CardapioViewModel
-import java.time.LocalDate
-
 
 // Cores extraídas da imagem
 val GreenText = Color(0xFF4CAF50)
@@ -49,22 +47,18 @@ fun DailyMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
 
     val categoriaSelecionada = tabs[selectedTab]
 
-    val hoje = remember { LocalDate.now().dayOfWeek.name } // "MONDAY", "TUESDAY", ...
-
-    val filtrados = remember(itens, categoriaSelecionada, hoje) {
+    val filtrados = remember(itens, categoriaSelecionada) {
         itens
             .filter { it.ativo }
             .filter { it.categoria.equals(categoriaSelecionada, ignoreCase = true) }
-            .filter { it.diasDisponiveis.isEmpty() || it.diasDisponiveis.contains(hoje) }
     }
-
 
     Scaffold(
         topBar = {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color.White)
+                    .background(MaterialTheme.colorScheme.surface)
                     .padding(top = 16.dp)
             ) {
                 Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -72,7 +66,7 @@ fun DailyMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
                         text = "Menu Diário",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
                 Spacer(modifier = Modifier.height(16.dp))
@@ -88,17 +82,17 @@ fun DailyMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
                     }
                 }
 
-                HorizontalDivider(color = Color(0xFFF5F5F5), thickness = 2.dp)
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 2.dp)
             }
         },
-        bottomBar = { BottomNavBar(nav) }
+        bottomBar = { BottomNavBar(nav) },
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
 
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(Color.White)
                 .padding(horizontal = 24.dp)
         ) {
             item { Spacer(modifier = Modifier.height(24.dp)) }
@@ -108,12 +102,11 @@ fun DailyMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
                     text = categoriaSelecionada,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black,
+                    color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
             }
 
-            // "loading" simples: ainda não veio nada
             if (itens.isEmpty()) {
                 item {
                     Column(
@@ -122,7 +115,7 @@ fun DailyMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
                             .padding(top = 32.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        CircularProgressIndicator()
+                        CircularProgressIndicator(color = GreenText)
                         Spacer(modifier = Modifier.height(12.dp))
                         Text("Carregando menu...", color = GreenText, fontSize = 14.sp)
                     }
@@ -209,7 +202,7 @@ fun FullDetailCard(data: MenuItemData) {
                     text = data.title,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black,
+                    color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
 
@@ -230,24 +223,24 @@ fun FullDetailCard(data: MenuItemData) {
                     .width(100.dp)
                     .height(70.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xFFE0E0E0))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
             )
         }
 
         HorizontalDivider(
             modifier = Modifier.padding(vertical = 12.dp),
             thickness = 1.dp,
-            color = LightGrayDivider
+            color = MaterialTheme.colorScheme.outlineVariant
         )
 
         Row(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.weight(0.4f)) {
                 Text("Calorias", color = GreenText, fontSize = 12.sp)
-                Text("${data.calories}", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                Text("${data.calories}", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onBackground)
             }
             Column(modifier = Modifier.weight(0.6f)) {
                 Text("Alérgenos", color = GreenText, fontSize = 12.sp)
-                Text(data.allergens, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                Text(data.allergens, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onBackground)
             }
         }
 
@@ -259,7 +252,7 @@ fun FullDetailCard(data: MenuItemData) {
                 text = "R$ %.2f".format(data.price).replace('.', ','),
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,
-                color = Color.Black
+                color = MaterialTheme.colorScheme.onBackground
             )
         }
     }
@@ -275,7 +268,7 @@ fun MenuTabItem(text: String, selected: Boolean, onClick: () -> Unit) {
     ) {
         Text(
             text = text,
-            color = if (selected) Color.Black else GreenText.copy(alpha = 0.7f),
+            color = if (selected) MaterialTheme.colorScheme.onSurface else GreenText.copy(alpha = 0.7f),
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
             fontSize = 14.sp,
             modifier = Modifier.padding(bottom = 8.dp)
@@ -286,16 +279,10 @@ fun MenuTabItem(text: String, selected: Boolean, onClick: () -> Unit) {
                 modifier = Modifier
                     .width(40.dp)
                     .height(3.dp)
-                    .background(Color.Black, RoundedCornerShape(2.dp))
+                    .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(2.dp))
             )
         } else {
             Spacer(modifier = Modifier.height(3.dp))
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DailyMenuPreview() {
-    DailyMenuScreen(nav = rememberNavController())
 }

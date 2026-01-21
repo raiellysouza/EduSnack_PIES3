@@ -3,8 +3,8 @@ package com.example.edusnack.ui.screens
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -41,7 +41,7 @@ fun CreateMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
     var preco by remember { mutableStateOf("") }
 
     // Categoria (dropdown)
-    val categorias = remember { listOf("Salgados", "Sucos", "Bolos", "Lanches") }
+    val categorias = remember { listOf("Salgados", "Bebidas", "Bolos", "Lanches") }
     var categoria by remember { mutableStateOf("Lanches") }
 
     // Estado da Imagem
@@ -71,13 +71,15 @@ fun CreateMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
     var vegano by remember { mutableStateOf(false) }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
                     Text(
                         "Adicionar item",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
+                        fontSize = 18.sp,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 },
                 navigationIcon = {
@@ -85,16 +87,15 @@ fun CreateMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Voltar",
-                            tint = DarkText
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color.White
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
             )
-        },
-        containerColor = Color.White
+        }
     ) { padding ->
         LazyColumn(
             modifier = Modifier
@@ -111,7 +112,7 @@ fun CreateMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
                         .fillMaxWidth()
                         .height(180.dp)
                         .clip(RoundedCornerShape(16.dp))
-                        .background(Color(0xFFF5F5F5))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
                         .clickable { launcher.launch("image/*") },
                     contentAlignment = Alignment.Center
                 ) {
@@ -128,10 +129,10 @@ fun CreateMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
                                 imageVector = Icons.Default.AddAPhoto,
                                 contentDescription = null,
                                 modifier = Modifier.size(48.dp),
-                                tint = Color.Gray
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text("Adicionar foto do item", color = Color.Gray)
+                            Text("Adicionar foto do item", color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
@@ -191,7 +192,7 @@ fun CreateMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
                     "Disponibilidade",
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
-                    color = DarkText
+                    color = MaterialTheme.colorScheme.onBackground
                 )
             }
 
@@ -213,7 +214,7 @@ fun CreateMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
                     "Restrições alimentares",
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
-                    color = DarkText
+                    color = MaterialTheme.colorScheme.onBackground
                 )
             }
 
@@ -226,7 +227,7 @@ fun CreateMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
                         onCheckedChange = { contemLactose = it },
                         colors = CheckboxDefaults.colors(checkedColor = Color(0xFF4CAF50))
                     )
-                    Text("Contém lactose", color = DarkText)
+                    Text("Contém lactose", color = MaterialTheme.colorScheme.onBackground)
                 }
             }
 
@@ -237,7 +238,7 @@ fun CreateMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
                         onCheckedChange = { contemGluten = it },
                         colors = CheckboxDefaults.colors(checkedColor = Color(0xFF4CAF50))
                     )
-                    Text("Contém glúten", color = DarkText)
+                    Text("Contém glúten", color = MaterialTheme.colorScheme.onBackground)
                 }
             }
 
@@ -248,7 +249,7 @@ fun CreateMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
                         onCheckedChange = { vegano = it },
                         colors = CheckboxDefaults.colors(checkedColor = Color(0xFF4CAF50))
                     )
-                    Text("Vegano/Vegetariano", color = DarkText)
+                    Text("Vegano/Vegetariano", color = MaterialTheme.colorScheme.onBackground)
                 }
             }
 
@@ -262,10 +263,10 @@ fun CreateMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
                         modifier = Modifier
                             .weight(1f)
                             .height(50.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE8F5E9)),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("Voltar", color = DarkText, fontWeight = FontWeight.Bold)
+                        Text("Voltar", color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold)
                     }
 
                     Spacer(modifier = Modifier.width(16.dp))
@@ -275,9 +276,8 @@ fun CreateMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
                             val precoDouble = preco.trim().replace(",", ".").toDoubleOrNull()
                             if (nome.isBlank() || precoDouble == null) return@Button
 
-                            // ✅ Dias da semana como lista de strings: ["MONDAY","TUESDAY",...]
                             val diasDisponiveis = selectedWeekdays
-                                .sortedBy { it.value % 7 } // Dom(0) ... Sáb(6) se você quiser Dom primeiro
+                                .sortedBy { it.value % 7 }
                                 .map { it.name }
 
                             val item = Cardapio(
@@ -305,7 +305,7 @@ fun CreateMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
                         colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("Salvar", color = DarkText, fontWeight = FontWeight.Bold)
+                        Text("Salvar", color = Color.Black, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -333,11 +333,13 @@ fun CustomTextField(
         singleLine = singleLine,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         colors = TextFieldDefaults.colors(
-            focusedContainerColor = Color(0xFFE9F2E8),
-            unfocusedContainerColor = Color(0xFFE9F2E8),
+            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent,
-            cursorColor = Color(0xFF4CAF50)
+            cursorColor = Color(0xFF4CAF50),
+            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+            unfocusedTextColor = MaterialTheme.colorScheme.onSurface
         )
     )
 }
@@ -367,11 +369,13 @@ fun CategoryDropdownField(
                 .menuAnchor(),
             shape = RoundedCornerShape(12.dp),
             colors = TextFieldDefaults.colors(
-                focusedContainerColor = Color(0xFFE9F2E8),
-                unfocusedContainerColor = Color(0xFFE9F2E8),
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
-                cursorColor = Color(0xFF4CAF50)
+                cursorColor = Color(0xFF4CAF50),
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface
             )
         )
 
@@ -422,7 +426,7 @@ fun WeekdayMultiSelectField(
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .clickable { open = true },
-        color = Color(0xFFE9F2E8)
+        color = MaterialTheme.colorScheme.surfaceVariant
     ) {
         Row(
             modifier = Modifier
@@ -432,7 +436,7 @@ fun WeekdayMultiSelectField(
         ) {
             Text(
                 text = summary,
-                color = if (selectedDays.isEmpty()) Color(0xFF4CAF50) else DarkText,
+                color = if (selectedDays.isEmpty()) Color(0xFF4CAF50) else MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f)
             )
             Text("▼", color = Color(0xFF4CAF50))
@@ -475,8 +479,6 @@ fun WeekdayMultiSelectDialog(
         title = { Text("Selecionar dias", fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-
-                // Ações rápidas
                 Row(
                     Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -489,21 +491,8 @@ fun WeekdayMultiSelectDialog(
                         onClick = { selected = emptySet() },
                         label = { Text("Limpar") }
                     )
-                    AssistChip(
-                        onClick = {
-                            selected = setOf(
-                                DayOfWeek.MONDAY,
-                                DayOfWeek.TUESDAY,
-                                DayOfWeek.WEDNESDAY,
-                                DayOfWeek.THURSDAY,
-                                DayOfWeek.FRIDAY
-                            )
-                        },
-                        label = { Text("Seg–Sex") }
-                    )
                 }
 
-                // Chips dos dias
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -521,32 +510,9 @@ fun WeekdayMultiSelectDialog(
                                     text = day.toPtBrShort(),
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                                 )
-                            },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = Color(0xFFB9F6CA),
-                                containerColor = Color.Transparent
-                            ),
-                            border = FilterChipDefaults.filterChipBorder(
-                                enabled = true,
-                                selected = isSelected,
-                                borderColor = Color(0xFF4CAF50),
-                                selectedBorderColor = Color(0xFF2E7D32),
-                                borderWidth = 1.dp
-                            )
+                            }
                         )
                     }
-                }
-
-                if (selected.isNotEmpty()) {
-                    val preview = ordered
-                        .filter { selected.contains(it) }
-                        .joinToString(", ") { it.toPtBrShort() }
-
-                    Text(
-                        "Selecionados: $preview",
-                        fontSize = 12.sp,
-                        color = Color(0xFF2E7D32)
-                    )
                 }
             }
         },
@@ -556,7 +522,7 @@ fun WeekdayMultiSelectDialog(
                 colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("Confirmar", color = DarkText, fontWeight = FontWeight.Bold)
+                Text("Confirmar", color = Color.Black, fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {

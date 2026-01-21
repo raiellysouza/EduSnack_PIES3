@@ -14,6 +14,8 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,10 +27,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.edusnack.ui.theme.GrayBackground
 import com.example.edusnack.ui.theme.GreenPrimary
+import com.example.edusnack.viewmodel.ThemeViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -38,7 +42,7 @@ import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(nav: NavController) {
+fun SettingsScreen(nav: NavController, themeViewModel: ThemeViewModel = viewModel()) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val auth = FirebaseAuth.getInstance()
@@ -46,7 +50,8 @@ fun SettingsScreen(nav: NavController) {
     val storage = FirebaseStorage.getInstance()
 
     var fotoUrl by remember { mutableStateOf<String?>(null) }
-    var loading by remember { mutableStateOf(false) }
+    var loadingFoto by remember { mutableStateOf(false) }
+    val isDarkMode by themeViewModel.isDarkMode.collectAsState()
 
     // Carregar foto atual
     LaunchedEffect(Unit) {
@@ -60,7 +65,7 @@ fun SettingsScreen(nav: NavController) {
     ) { uri: Uri? ->
         uri?.let {
             scope.launch {
-                loading = true
+                loadingFoto = true
                 try {
                     val uid = auth.currentUser?.uid ?: return@launch
                     val ref = storage.reference.child("perfis/$uid.jpg")
@@ -74,7 +79,7 @@ fun SettingsScreen(nav: NavController) {
                 } catch (e: Exception) {
                     Toast.makeText(context, "Erro ao subir foto: ${e.message}", Toast.LENGTH_SHORT).show()
                 } finally {
-                    loading = false
+                    loadingFoto = false
                 }
             }
         }
@@ -95,7 +100,7 @@ fun SettingsScreen(nav: NavController) {
         Box(modifier = Modifier
             .fillMaxSize()
             .padding(padding)
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.background)
         ) {
             Column(modifier = Modifier
                 .fillMaxSize()
@@ -114,7 +119,7 @@ fun SettingsScreen(nav: NavController) {
                             .clickable { launcher.launch("image/*") },
                         contentAlignment = Alignment.Center
                     ) {
-                        if (loading) {
+                        if (loadingFoto) {
                             CircularProgressIndicator(color = GreenPrimary)
                         } else {
                             AsyncImage(
@@ -123,7 +128,6 @@ fun SettingsScreen(nav: NavController) {
                                 modifier = Modifier.fillMaxSize(),
                                 contentScale = ContentScale.Crop
                             )
-                            // Ícone de câmera sobreposto
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -143,10 +147,60 @@ fun SettingsScreen(nav: NavController) {
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                Text(text = "Minha Conta", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(
+                    text = "Aparência", 
+                    style = MaterialTheme.typography.titleMedium, 
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Opções
+                // BOTÃO DE ALTERNAR TEMA
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Surface(
+                            color = GrayBackground,
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.size(48.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = if (isDarkMode) Icons.Default.DarkMode else Icons.Default.LightMode, 
+                                    contentDescription = null, 
+                                    tint = Color.Black
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Text(
+                            text = if (isDarkMode) "Modo Escuro Ativo" else "Modo Claro Ativo",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                    Switch(
+                        checked = isDarkMode,
+                        onCheckedChange = { themeViewModel.toggleTheme() },
+                        colors = SwitchDefaults.colors(checkedThumbColor = GreenPrimary)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Text(
+                    text = "Minha Conta", 
+                    style = MaterialTheme.typography.titleMedium, 
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+
                 SettingsRow(
                     icon = Icons.Filled.Restaurant,
                     label = "Dados da Cantina/Perfil",
@@ -204,6 +258,10 @@ private fun SettingsRow(icon: androidx.compose.ui.graphics.vector.ImageVector, l
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        Text(text = label, style = MaterialTheme.typography.bodyLarge)
+        Text(
+            text = label, 
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onBackground
+        )
     }
 }

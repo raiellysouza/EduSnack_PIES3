@@ -4,6 +4,7 @@ package com.example.edusnack.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -28,7 +29,7 @@ fun SummaryDashboardCard(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.surfaceVariant) // COR DO TEMA
             .padding(16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
@@ -41,39 +42,38 @@ fun SummaryDashboardCard(
         ) {
             Text(
                 text = title,
-                color = Color(0xFF4CAF50), // Verde Texto
+                color = MaterialTheme.colorScheme.primary, // COR DO TEMA (Verde)
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium
             )
 
             Text(
                 text = value,
-                color = Color.Black,
-                fontSize = 28.sp, // Número Grande
+                color = MaterialTheme.colorScheme.onSurfaceVariant, // COR DO TEMA (Valor)
+                fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(vertical = 4.dp)
             )
 
             Text(
                 text = description,
-                color = Color(0xFF4CAF50),
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f), // COR DO TEMA
                 fontSize = 12.sp,
                 lineHeight = 16.sp
             )
         }
 
         // Lado Direito (Imagem Ilustrativa)
-        // Usamos um Box com cor de fundo pêssego/laranja claro conforme a imagem
         Box(
             modifier = Modifier
-                .size(100.dp, 70.dp) // Formato retangular horizontal
+                .size(100.dp, 70.dp)
                 .clip(RoundedCornerShape(8.dp))
-                .background(Color(0xFFFFCCBC)) // Cor pêssego do fundo da imagem
+                .background(MaterialTheme.colorScheme.surface) // COR DO TEMA
         ) {
             AsyncImage(
                 model = imageUrl,
                 contentDescription = null,
-                contentScale = ContentScale.Crop, // Ou Fit dependendo da sua imagem
+                contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
             )
         }

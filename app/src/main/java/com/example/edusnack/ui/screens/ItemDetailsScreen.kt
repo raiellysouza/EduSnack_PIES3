@@ -55,7 +55,7 @@ fun ItemDetailsScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color.White)
+                    .background(MaterialTheme.colorScheme.surface)
                     .padding(16.dp)
             ) {
                 IconButton(
@@ -65,19 +65,20 @@ fun ItemDetailsScreen(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Voltar",
-                        tint = Color.Black
+                        tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
                 Text(
                     text = "Detalhes do Item",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.align(Alignment.Center)
                 )
             }
         },
-        bottomBar = { BottomNavBar(nav) }
+        bottomBar = { BottomNavBar(nav) },
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
 
         if (item == null) {
@@ -85,7 +86,7 @@ fun ItemDetailsScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .background(Color.White),
+                    .background(MaterialTheme.colorScheme.background),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
@@ -102,7 +103,7 @@ fun ItemDetailsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(Color.White)
+                .background(MaterialTheme.colorScheme.background)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp)
         ) {
@@ -116,7 +117,7 @@ fun ItemDetailsScreen(
                     .fillMaxWidth()
                     .height(220.dp)
                     .clip(RoundedCornerShape(16.dp))
-                    .background(Color.LightGray)
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -125,7 +126,7 @@ fun ItemDetailsScreen(
                 text = i.nome,
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black,
+                color = MaterialTheme.colorScheme.onBackground,
                 lineHeight = 28.sp
             )
 
@@ -134,12 +135,12 @@ fun ItemDetailsScreen(
             Text(
                 text = i.descricao,
                 fontSize = 14.sp,
-                color = Color.Gray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 lineHeight = 20.sp
             )
 
             Spacer(modifier = Modifier.height(24.dp))
-            HorizontalDivider(color = Color(0xFFF5F5F5), thickness = 1.dp)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 1.dp)
             Spacer(modifier = Modifier.height(16.dp))
 
             // --- Seleção de Dias da Semana ---
@@ -162,7 +163,7 @@ fun ItemDetailsScreen(
                         modifier = Modifier
                             .size(56.dp)
                             .clip(RoundedCornerShape(8.dp))
-                            .background(if (isSelected) DetailsBrightGreenButton else Color(0xFFF5F5F5))
+                            .background(if (isSelected) DetailsBrightGreenButton else MaterialTheme.colorScheme.surfaceVariant)
                             .clickable { 
                                 if (isSelected) selecionados.remove(dia) else selecionados.add(dia)
                             },
@@ -171,7 +172,7 @@ fun ItemDetailsScreen(
                         Text(
                             text = dia,
                             fontWeight = FontWeight.Bold,
-                            color = if (isSelected) Color.Black else Color.Gray,
+                            color = if (isSelected) Color.Black else MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 13.sp
                         )
                     }
@@ -179,7 +180,7 @@ fun ItemDetailsScreen(
             }
 
             Spacer(modifier = Modifier.height(24.dp))
-            HorizontalDivider(color = Color(0xFFF5F5F5), thickness = 1.dp)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 1.dp)
             Spacer(modifier = Modifier.height(16.dp))
 
             Row(modifier = Modifier.fillMaxWidth()) {
@@ -193,7 +194,7 @@ fun ItemDetailsScreen(
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "R$ %.2f".format(i.preco ?: 0.0).replace('.', ','),
-                        color = Color.Black,
+                        color = MaterialTheme.colorScheme.onBackground,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Medium
                     )
@@ -210,7 +211,7 @@ fun ItemDetailsScreen(
                     val total = (i.preco ?: 0.0) * selecionados.size
                     Text(
                         text = "R$ %.2f".format(total).replace('.', ','),
-                        color = Color.Black,
+                        color = MaterialTheme.colorScheme.onBackground,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -222,7 +223,6 @@ fun ItemDetailsScreen(
             Button(
                 onClick = {
                     if (selecionados.isNotEmpty()) {
-                        // CORREÇÃO: Passando a lista de dias selecionados para o carrinho
                         carrinhoVm.adicionar(i, selecionados.toList()) 
                         nav.navigate("carrinho")
                     }
@@ -240,7 +240,7 @@ fun ItemDetailsScreen(
             ) {
                 Text(
                     text = if (selecionados.isEmpty()) "Selecione os dias" else "Confirmar Pedido",
-                    color = if (selecionados.isEmpty()) Color.Gray else Color.Black,
+                    color = Color.Black,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp
                 )
