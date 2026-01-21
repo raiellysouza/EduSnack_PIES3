@@ -10,11 +10,12 @@ import androidx.navigation.navArgument
 import com.example.edusnack.ui.screens.*
 import com.example.edusnack.viewmodel.CardapioViewModel
 import com.example.edusnack.viewmodel.CarrinhoViewModel
+import com.example.edusnack.viewmodel.ThemeViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 
 @Composable
-fun AppNavGraph(start: String = "welcome") {
+fun AppNavGraph(start: String = "welcome", themeViewModel: ThemeViewModel) {
     val navController = rememberNavController()
     val cardapioVm: CardapioViewModel = viewModel()
     val carrinhoVm: CarrinhoViewModel = viewModel()
@@ -25,7 +26,6 @@ fun AppNavGraph(start: String = "welcome") {
         composable("register") { RegisterScreen(navController) }
         composable("forgot") { ForgotPasswordScreen(navController) }
 
-        // New data registration screen with tipo argument
         composable(
             route = "register_data/{tipo}",
             arguments = listOf(navArgument("tipo") { type = NavType.StringType })
@@ -34,22 +34,16 @@ fun AppNavGraph(start: String = "welcome") {
             DataRegistrationScreen(navController, tipo)
         }
 
-        // Settings routes
-        composable("settings") { SettingsScreen(navController) }
-        composable("canteen_settings") { SettingsScreen(navController) }
+        // Settings unificadas passando o tema global
+        composable("settings") { SettingsScreen(navController, themeViewModel) }
+        composable("canteen_settings") { SettingsScreen(navController, themeViewModel) }
 
-        // Rota principal unificada para Alunos/Responsáveis
         composable("dailyMenu") { DailyMenuScreen(navController, vm = cardapioVm) }
-        
-        // Rota principal para Cantina
         composable("homeCantina") { CanteenDashboardScreen(navController) }
-        
         composable("view_orders") { ViewOrdersScreen(navController) }
         composable("manage_menu") { ManageMenuScreen(navController, vm = cardapioVm) }
         composable("create_menu") { CreateMenuScreen(navController, vm = cardapioVm) }
 
-        // REMOVIDO: advanceOrder - Funcionalidade agora integrada no dailyMenu
-        
         composable("studentAccount") { StudentAccountScreen(navController) }
         composable("canteenInfo") { CanteenInfoScreen(navController) }
         composable("canteen_profile") { CanteenProfileScreen(navController) }

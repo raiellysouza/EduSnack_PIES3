@@ -42,23 +42,27 @@ fun CanteenDashboardScreen(
     var overflowExpanded by remember { mutableStateOf(false) }
 
     Scaffold(
-        containerColor = GrayBackground,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
                     Text(
                         "Painel da Cantina",
                         fontWeight = FontWeight.Bold,
-                        color = DarkText,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontSize = 18.sp
                     )
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = GrayBackground
+                    containerColor = MaterialTheme.colorScheme.surface
                 ),
                 actions = {
                     IconButton(onClick = { overflowExpanded = true }) {
-                        Icon(imageVector = Icons.Filled.MoreVert, contentDescription = "Mais")
+                        Icon(
+                            imageVector = Icons.Filled.MoreVert, 
+                            contentDescription = "Mais",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
                     }
 
                     DropdownMenu(
@@ -96,7 +100,7 @@ fun CanteenDashboardScreen(
         bottomBar = { CanteenBottomNavBar(nav) }
     ) { padding ->
         if (loading) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(color = GreenPrimary)
             }
         } else {
@@ -104,6 +108,7 @@ fun CanteenDashboardScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
+                    .background(MaterialTheme.colorScheme.background)
                     .padding(horizontal = 24.dp)
             ) {
                 item {
@@ -111,7 +116,7 @@ fun CanteenDashboardScreen(
                         text = "Resumo do Dia",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = DarkText,
+                        color = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier.padding(vertical = 16.dp)
                     )
                 }
@@ -161,7 +166,7 @@ fun CanteenDashboardScreen(
                         text = "Ações",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = DarkText,
+                        color = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
                 }
@@ -170,7 +175,7 @@ fun CanteenDashboardScreen(
                     ActionButton(
                         text = "Criar cardápio",
                         backgroundColor = GreenPrimary,
-                        textColor = Color.White,
+                        textColor = Color.Black,
                         onClick = { nav.navigate("create_menu") }
                     )
                     Spacer(modifier = Modifier.height(12.dp))
@@ -179,8 +184,8 @@ fun CanteenDashboardScreen(
                 item {
                     ActionButton(
                         text = "Ver pedidos",
-                        backgroundColor = Color(0xFFE8F5E9),
-                        textColor = DarkText,
+                        backgroundColor = MaterialTheme.colorScheme.surfaceVariant,
+                        textColor = MaterialTheme.colorScheme.onSurfaceVariant,
                         onClick = { nav.navigate("view_orders") }
                     )
                     Spacer(modifier = Modifier.height(24.dp))

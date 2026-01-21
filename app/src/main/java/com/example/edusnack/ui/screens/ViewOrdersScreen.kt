@@ -23,7 +23,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.edusnack.model.Pedido
@@ -35,10 +34,7 @@ import com.example.edusnack.viewmodel.PedidoViewModel
 import com.google.firebase.Timestamp
 import java.util.Calendar
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.indication
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.ui.draw.shadow
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,7 +47,6 @@ fun ViewOrdersScreen(nav: NavController, vm: PedidoViewModel = viewModel()) {
     // 0: Pendentes, 1: Preparando, 2: Prontos, 3: Entregues, 4: Cancelados
     var selectedStatusTab by remember { mutableIntStateOf(0) }
     val statusTabs = listOf("Pendentes", "Preparando", "Prontos", "Entregues", "Cancelados")
-
 
     var searchText by remember { mutableStateOf("") }
     val query = searchText.trim().lowercase()
@@ -71,9 +66,8 @@ fun ViewOrdersScreen(nav: NavController, vm: PedidoViewModel = viewModel()) {
         else -> StatusPedido.CANCELADO
     }
 
-
     fun timeFilterOK(p: Pedido): Boolean {
-        if (selectedTimeTab == 2) return true // Todos
+        if (selectedTimeTab == 2) return true 
 
         val cal = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, 0)
@@ -83,13 +77,11 @@ fun ViewOrdersScreen(nav: NavController, vm: PedidoViewModel = viewModel()) {
         }
 
         return if (selectedTimeTab == 0) {
-            // Hoje
             val start = Timestamp(cal.time)
             cal.add(Calendar.DAY_OF_MONTH, 1)
             val end = Timestamp(cal.time)
             p.data >= start && p.data < end
         } else {
-            // Semana (segunda -> domingo)
             cal.firstDayOfWeek = Calendar.MONDAY
             cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
             val start = Timestamp(cal.time)
@@ -99,30 +91,31 @@ fun ViewOrdersScreen(nav: NavController, vm: PedidoViewModel = viewModel()) {
         }
     }
 
-    // SnackBar pro erro
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(error) {
         if (!error.isNullOrBlank()) {
             snackbarHostState.showSnackbar(error!!)
-            vm.clearError()
+            // vm.clearError() // Chamada removida se não existir
         }
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Pedidos", fontWeight = FontWeight.Bold, fontSize = 18.sp) },
+                title = { Text("Pedidos", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurface) },
                 navigationIcon = {
                     IconButton(onClick = { nav.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar", tint = MaterialTheme.colorScheme.onSurface)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
             )
         },
         bottomBar = { CanteenBottomNavBar(nav) },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = Color.White
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
 
         Column(
@@ -147,7 +140,7 @@ fun ViewOrdersScreen(nav: NavController, vm: PedidoViewModel = viewModel()) {
                     ) {
                         Text(
                             text = title,
-                            color = if (selectedTimeTab == index) DarkText else Color.Gray,
+                            color = if (selectedTimeTab == index) MaterialTheme.colorScheme.onSurface else Color.Gray,
                             fontWeight = if (selectedTimeTab == index) FontWeight.Bold else FontWeight.Normal,
                             fontSize = 16.sp
                         )
@@ -186,7 +179,6 @@ fun ViewOrdersScreen(nav: NavController, vm: PedidoViewModel = viewModel()) {
                 }
             }
 
-
             Spacer(modifier = Modifier.height(16.dp))
 
             // --- BUSCA ---
@@ -194,15 +186,17 @@ fun ViewOrdersScreen(nav: NavController, vm: PedidoViewModel = viewModel()) {
                 TextField(
                     value = searchText,
                     onValueChange = { searchText = it },
-                    placeholder = { Text("Buscar aluno", color = Color(0xFF4CAF50)) },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Color(0xFF4CAF50)) },
+                    placeholder = { Text("Buscar aluno", color = MaterialTheme.colorScheme.primary) },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color(0xFFE9F2E8),
-                        unfocusedContainerColor = Color(0xFFE9F2E8),
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                         focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent
+                        unfocusedIndicatorColor = Color.Transparent,
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                     )
                 )
             }
@@ -274,19 +268,19 @@ private fun SeriesHeader(title: String, count: Int, expanded: Boolean, onToggle:
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFFF8FFF8))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
             .clickable { onToggle() }
             .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(title, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = DarkText)
-            Text("$count pedido(s)", fontSize = 12.sp, color = Color.Gray)
+            Text(title, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
+            Text("$count pedido(s)", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Icon(
             imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
             contentDescription = null,
-            tint = Color.Gray
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
@@ -304,7 +298,7 @@ private fun PedidoCardPrototype(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFFF8FFF8), RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(12.dp))
             .padding(12.dp)
     ) {
 
@@ -318,19 +312,19 @@ private fun PedidoCardPrototype(
                     text = if (titulo.isNotBlank()) titulo else "Aluno",
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
-                    color = DarkText
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 val itemsText = pedido.itens.joinToString(", ") { it.nome }
                 if (itemsText.isNotBlank()) {
-                    Text(itemsText, color = Color(0xFF2E7D32), fontSize = 14.sp)
+                    Text(itemsText, color = MaterialTheme.colorScheme.primary, fontSize = 14.sp)
                 }
 
                 Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
                     text = "Código: ${pedido.codigoRetirada}",
-                    color = Color.Gray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 13.sp
                 )
             }
@@ -338,13 +332,12 @@ private fun PedidoCardPrototype(
             Text(
                 text = "R$ ${String.format("%.2f", pedido.total)}",
                 fontWeight = FontWeight.Bold,
-                color = DarkText
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Chips com base + sobreposição do selecionado (protótipo)
         StatusChipsPrototype(
             status = pedido.status,
             onPreparando = onSetPreparando,
@@ -353,18 +346,17 @@ private fun PedidoCardPrototype(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Botões iguais (mesma altura/largura)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             ActionButtonPrototype(
-                text = "Marcar como entregue",
+                text = "Entregue hoje",
                 onClick = { onSetEntregue() },
                 modifier = Modifier.weight(1f)
             )
             ActionButtonPrototype(
-                text = "Cancelar pedido",
+                text = "Cancelar",
                 onClick = { showConfirmCancel = true },
                 modifier = Modifier.weight(1f)
             )
@@ -382,7 +374,7 @@ private fun PedidoCardPrototype(
                         showConfirmCancel = false
                         onCancelar()
                     }
-                ) { Text("Cancelar pedido") }
+                ) { Text("Sim, cancelar") }
             },
             dismissButton = {
                 TextButton(onClick = { showConfirmCancel = false }) { Text("Voltar") }
@@ -397,55 +389,38 @@ private fun StatusChipsPrototype(
     onPreparando: () -> Unit,
     onPronto: () -> Unit
 ) {
-    val podeClicarPreparando =
-        status == StatusPedido.PENDENTE || status == StatusPedido.PREPARANDO
-    val podeClicarPronto =
-        status == StatusPedido.PREPARANDO || status == StatusPedido.PRONTO
-
-    val groupBg = Color(0xFFE8F2EB)
+    val podeClicarPreparando = status == StatusPedido.PENDENTE || status == StatusPedido.PREPARANDO
+    val podeClicarPronto = status == StatusPedido.PREPARANDO || status == StatusPedido.PRONTO
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(46.dp)
-            .clip(RoundedCornerShape(999.dp))   // pill 100% redondo
-            .background(groupBg)
-            .padding(4.dp)                      // margem interna igual “moldura”
+            .clip(RoundedCornerShape(999.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .padding(4.dp)
     ) {
         StatusChipPrototype(
             label = "Preparando",
             selected = status == StatusPedido.PREPARANDO,
             enabled = podeClicarPreparando,
-            shape = RoundedCornerShape(
-                topStart = 999.dp, bottomStart = 999.dp,
-                topEnd = 0.dp, bottomEnd = 0.dp
-            ),
+            shape = RoundedCornerShape(topStart = 999.dp, bottomStart = 999.dp, topEnd = 0.dp, bottomEnd = 0.dp),
             modifier = Modifier.weight(1f),
             onClick = onPreparando
         )
 
-        // divisor do meio
-        Box(
-            modifier = Modifier
-                .fillMaxHeight()
-                .width(1.dp)
-                .background(Color(0xFFD6E6D6))
-        )
+        Box(modifier = Modifier.fillMaxHeight().width(1.dp).background(MaterialTheme.colorScheme.outlineVariant))
 
         StatusChipPrototype(
             label = "Pronto",
             selected = status == StatusPedido.PRONTO,
             enabled = podeClicarPronto,
-            shape = RoundedCornerShape(
-                topStart = 0.dp, bottomStart = 0.dp,
-                topEnd = 999.dp, bottomEnd = 999.dp
-            ),
+            shape = RoundedCornerShape(topStart = 0.dp, bottomStart = 0.dp, topEnd = 999.dp, bottomEnd = 999.dp),
             modifier = Modifier.weight(1f),
             onClick = onPronto
         )
     }
 }
-
 
 @Composable
 private fun StatusChipPrototype(
@@ -459,36 +434,19 @@ private fun StatusChipPrototype(
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
 
-    // (Android não tem hover real; se você estiver no Desktop, dá pra adicionar hover depois)
-    val showHoverBg = enabled && !selected && pressed
-
-    val greenText = Color(0xFF2F9E44)
     val textColor = when {
-        !enabled -> Color(0xFFBDBDBD)
-        selected -> Color(0xFF1E1E1E)
-        else -> greenText
+        !enabled -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+        selected -> MaterialTheme.colorScheme.primary
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
 
-    val bg = when {
-        selected -> Color(0xFFF7FCFA)
-        showHoverBg -> Color(0xFFDDE8DD) // cinza/verde claro no “passar/clicar”
-        else -> Color.Transparent
-    }
-
-    val elevation = when {
-        !enabled -> 0.dp
-        selected && pressed -> 1.dp
-        selected -> 2.dp
-        pressed -> 0.2.dp
-        else -> 0.dp
-    }
-
+    val bg = if (selected) MaterialTheme.colorScheme.surface else Color.Transparent
 
     Surface(
         color = bg,
         shape = shape,
-        shadowElevation = elevation,
-        border = if (selected) BorderStroke(1.dp, Color(0xFFE6E6E6)) else null,
+        shadowElevation = if (selected) 2.dp else 0.dp,
+        border = if (selected) BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant) else null,
         modifier = modifier
             .fillMaxHeight()
             .clickable(
@@ -498,12 +456,7 @@ private fun StatusChipPrototype(
             ) { onClick() }
     ) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(
-                text = label,
-                color = textColor,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold
-            )
+            Text(text = label, color = textColor, fontSize = 14.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -518,16 +471,12 @@ private fun ActionButtonPrototype(
         onClick = onClick,
         modifier = modifier.height(52.dp),
         shape = RoundedCornerShape(12.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE5EFE5)),
-        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp)
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+        ),
+        contentPadding = PaddingValues(horizontal = 8.dp)
     ) {
-        Text(
-            text = text,
-            color = DarkText,
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Bold,
-            maxLines = 2,
-            lineHeight = 16.sp
-        )
+        Text(text = text, fontSize = 12.sp, fontWeight = FontWeight.Bold, maxLines = 1)
     }
 }

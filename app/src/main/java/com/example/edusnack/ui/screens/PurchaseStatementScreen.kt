@@ -20,55 +20,55 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.edusnack.ui.components.BottomNavBar
+import com.example.edusnack.ui.theme.GreenPrimary
 
 // Modelo de dados simples para as transações
-data class TransactionItem(
+data class PurchaseTransaction(
     val title: String,
     val studentName: String,
     val date: String,
     val price: String
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PurchaseStatementScreen(nav: NavController) {
     // Lista de transações baseada na imagem enviada
     val transactions = listOf(
-        TransactionItem("Sanduíche de Frango", "Aluno 1", "12/07/2024 14:30", "R$ 8,50"),
-        TransactionItem("Suco de Laranja", "Aluno 2", "12/07/2024 12:15", "R$ 4,00"),
-        TransactionItem("Biscoito de Chocolate", "Aluno 1", "11/07/2024 15:45", "R$ 3,00"),
-        TransactionItem("Salada de Frutas", "Aluno 2", "11/07/2024 11:00", "R$ 6,00")
+        PurchaseTransaction("Sanduíche de Frango", "Aluno 1", "12/07/2024 14:30", "R$ 8,50"),
+        PurchaseTransaction("Suco de Laranja", "Aluno 2", "12/07/2024 12:15", "R$ 4,00"),
+        PurchaseTransaction("Biscoito de Chocolate", "Aluno 1", "11/07/2024 15:45", "R$ 3,00"),
+        PurchaseTransaction("Salada de Frutas", "Aluno 2", "11/07/2024 11:00", "R$ 6,00")
     )
 
     // Estado para o filtro (Todos, Aluno 1, Aluno 2)
     var selectedFilter by remember { mutableStateOf("Todos") }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            // Header igual ao da tela de Informações
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White)
-                    .padding(16.dp)
-            ) {
-                IconButton(
-                    onClick = { nav.popBackStack() },
-                    modifier = Modifier.align(Alignment.CenterStart)
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Voltar",
-                        tint = Color.Black
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        text = "Extrato de Compras",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
-                }
-                Text(
-                    text = "Extrato de Compras",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black,
-                    modifier = Modifier.align(Alignment.Center)
+                },
+                navigationIcon = {
+                    IconButton(onClick = { nav.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Voltar",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
-            }
+            )
         },
         bottomBar = { BottomNavBar(nav) }
     ) { padding ->
@@ -76,7 +76,7 @@ fun PurchaseStatementScreen(nav: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(Color.White)
+                .background(MaterialTheme.colorScheme.background)
                 .padding(horizontal = 24.dp)
         ) {
 
@@ -87,9 +87,9 @@ fun PurchaseStatementScreen(nav: NavController) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                FilterChip(text = "Todos", selected = selectedFilter == "Todos") { selectedFilter = "Todos" }
-                FilterChip(text = "Aluno 1", selected = selectedFilter == "Aluno 1") { selectedFilter = "Aluno 1" }
-                FilterChip(text = "Aluno 2", selected = selectedFilter == "Aluno 2") { selectedFilter = "Aluno 2" }
+                StatementFilterChip(text = "Todos", selected = selectedFilter == "Todos") { selectedFilter = "Todos" }
+                StatementFilterChip(text = "Aluno 1", selected = selectedFilter == "Aluno 1") { selectedFilter = "Aluno 1" }
+                StatementFilterChip(text = "Aluno 2", selected = selectedFilter == "Aluno 2") { selectedFilter = "Aluno 2" }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -99,7 +99,7 @@ fun PurchaseStatementScreen(nav: NavController) {
                 text = "Transações",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black,
+                color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
@@ -120,9 +120,9 @@ fun PurchaseStatementScreen(nav: NavController) {
 
 // --- Componente: Botão de Filtro ---
 @Composable
-fun FilterChip(text: String, selected: Boolean, onClick: () -> Unit) {
+fun StatementFilterChip(text: String, selected: Boolean, onClick: () -> Unit) {
     Surface(
-        color = LightGreenBackground, // Fundo sempre verde claro conforme a imagem
+        color = if (selected) GreenPrimary else MaterialTheme.colorScheme.surfaceVariant,
         shape = RoundedCornerShape(8.dp),
         modifier = Modifier.clickable { onClick() }
     ) {
@@ -130,7 +130,7 @@ fun FilterChip(text: String, selected: Boolean, onClick: () -> Unit) {
             text = text,
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.Black,
+            color = if (selected) Color.Black else MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
         )
     }
@@ -138,7 +138,7 @@ fun FilterChip(text: String, selected: Boolean, onClick: () -> Unit) {
 
 // --- Componente: Linha da Transação ---
 @Composable
-fun TransactionRow(item: TransactionItem) {
+fun TransactionRow(item: PurchaseTransaction) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -150,19 +150,19 @@ fun TransactionRow(item: TransactionItem) {
                 text = item.title,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black,
+                color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.padding(bottom = 4.dp)
             )
             Text(
                 text = item.studentName,
                 fontSize = 14.sp,
-                color = AppGreen, // Verde da identidade visual
+                color = GreenPrimary,
                 modifier = Modifier.padding(bottom = 2.dp)
             )
             Text(
                 text = item.date,
-                fontSize = 12.sp, // Um pouco menor para a data
-                color = AppGreen
+                fontSize = 12.sp,
+                color = GreenPrimary
             )
         }
 
@@ -171,7 +171,7 @@ fun TransactionRow(item: TransactionItem) {
             text = item.price,
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.Black
+            color = MaterialTheme.colorScheme.onBackground
         )
     }
 }

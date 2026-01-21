@@ -29,14 +29,13 @@ fun CarrinhoScreen(
 ) {
     val itens by vm.itens.collectAsState()
 
-    // Saldo (se quiser manter)
     val db = remember { FirebaseFirestore.getInstance() }
     var saldoDisponivel by remember { mutableStateOf<Double?>(null) }
 
     LaunchedEffect(usuarioId) {
         saldoDisponivel = try {
-            val docUsuarios = db.collection("usuarios").document(usuarioId).get().await()
-            docUsuarios.getDouble("saldo") ?: docUsuarios.getDouble("carteira")
+            val docUsuarios = db.collection("alunos").document(usuarioId).get().await()
+            docUsuarios.getDouble("saldo")
         } catch (_: Exception) {
             null
         }
@@ -45,24 +44,29 @@ fun CarrinhoScreen(
     val total = remember(itens) { vm.total() }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color.White)
+                    .background(MaterialTheme.colorScheme.surface)
                     .padding(16.dp)
             ) {
                 IconButton(
                     onClick = { nav.popBackStack() },
                     modifier = Modifier.align(Alignment.CenterStart)
                 ) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack, 
+                        contentDescription = "Voltar",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
                 }
                 Text(
                     text = "Finalizar Compra",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.align(Alignment.Center)
                 )
             }
@@ -75,11 +79,11 @@ fun CarrinhoScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .background(Color.White),
+                    .background(MaterialTheme.colorScheme.background),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                Text("Seu carrinho está vazio.", color = Color.Gray)
+                Text("Seu carrinho está vazio.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(Modifier.height(12.dp))
                 Button(
                     onClick = { nav.navigate("dailyMenu") },
@@ -95,12 +99,17 @@ fun CarrinhoScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(Color.White)
+                .background(MaterialTheme.colorScheme.background)
                 .padding(horizontal = 24.dp)
         ) {
             Spacer(Modifier.height(16.dp))
 
-            Text("Carrinho", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text(
+                "Carrinho", 
+                fontSize = 16.sp, 
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
+            )
             Spacer(Modifier.height(12.dp))
 
             LazyColumn(
@@ -109,7 +118,6 @@ fun CarrinhoScreen(
             ) {
                 items(itens) { ci ->
                     val nome = ci.item.nome
-                    val qtd = ci.quantidade
                     val subtotal = ci.subtotal()
 
                     Row(
@@ -118,66 +126,49 @@ fun CarrinhoScreen(
                             .padding(vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Esquerda: nome + qtd
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(text = nome, fontSize = 14.sp, color = Color.Black)
+                            Text(text = nome, fontSize = 14.sp, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold)
                             Spacer(Modifier.height(4.dp))
-                            Text(
-                                text = "${qtd}x",
-                                fontSize = 12.sp,
-                                color = Color(0xFF4CAF50)
-                            )
+                            
+                            if (ci.diasReserva.isNotEmpty()) {
+                                Text(
+                                    text = "Reservado: ${ci.diasReserva.joinToString(", ")}",
+                                    fontSize = 12.sp,
+                                    color = Color(0xFF4CAF50)
+                                )
+                            }
                         }
 
-                        // Direita: preço e controles
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 text = money(subtotal),
                                 fontSize = 14.sp,
-                                color = Color.Black,
-                                modifier = Modifier.padding(end = 12.dp)
+                                color = MaterialTheme.colorScheme.onBackground,
+                                modifier = Modifier.padding(end = 12.dp),
+                                fontWeight = FontWeight.Bold
                             )
 
-                            Column(
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                SmallSquareButton(text = "+") { vm.adicionar(ci.item) }
-                                SmallSquareButton(text = "–") { vm.remover(ci.item) }
-                            }
+                            SmallSquareButton(text = "–") { vm.remover(ci.item) }
                         }
                     }
 
-                    HorizontalDivider(color = Color(0xFFF2F2F2), thickness = 1.dp)
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 1.dp)
                 }
             }
 
             Spacer(Modifier.height(8.dp))
 
-            Text("Resumo", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text("Resumo", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
             Spacer(Modifier.height(12.dp))
 
-            SummaryRow(label = "Total", value = money(total))
+            SummaryRow(label = "Total Semanal", value = money(total))
             Spacer(Modifier.height(8.dp))
             SummaryRow(
-                label = "Saldo Disponível",
+                label = "Meu Saldo",
                 value = saldoDisponivel?.let { money(it) } ?: "—"
             )
 
             Spacer(Modifier.height(16.dp))
-
-            OutlinedButton(
-                onClick = { nav.navigate("dailyMenu") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-            ) {
-                Text("Adicionar mais opções")
-            }
-
-            Spacer(Modifier.height(12.dp))
 
             Button(
                 onClick = {
@@ -206,19 +197,16 @@ private fun SummaryRow(label: String, value: String) {
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(text = label, fontSize = 12.sp, color = Color(0xFF4CAF50))
-        Text(text = value, fontSize = 12.sp, color = Color.Black)
+        Text(text = value, fontSize = 12.sp, color = MaterialTheme.colorScheme.onBackground)
     }
 }
 
 @Composable
-private fun SmallSquareButton(
-    text: String,
-    onClick: () -> Unit
-) {
+private fun SmallSquareButton(text: String, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .size(34.dp)
-            .background(Color(0xFFE9F2E8), RoundedCornerShape(8.dp)),
+            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp)),
         contentAlignment = Alignment.Center
     ) {
         TextButton(
@@ -226,10 +214,9 @@ private fun SmallSquareButton(
             contentPadding = PaddingValues(0.dp),
             modifier = Modifier.fillMaxSize()
         ) {
-            Text(text = text, color = Color.Black, fontWeight = FontWeight.Bold)
+            Text(text = text, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold)
         }
     }
 }
 
-private fun money(v: Double): String =
-    "R$ %.2f".format(v).replace('.', ',')
+private fun money(v: Double): String = "R$ %.2f".format(v).replace('.', ',')

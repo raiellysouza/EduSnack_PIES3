@@ -24,6 +24,7 @@ import com.example.edusnack.ui.components.BottomNavBar
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PedidoConfirmadoScreen(
     nav: NavController,
@@ -52,26 +53,30 @@ fun PedidoConfirmadoScreen(
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White)
-                    .padding(16.dp)
-            ) {
-                IconButton(
-                    onClick = { nav.popBackStack() },
-                    modifier = Modifier.align(Alignment.CenterStart)
-                ) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
-                }
-                Text(
-                    text = "Pedido Confirmado",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.align(Alignment.Center)
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        text = "Pedido Confirmado",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = { nav.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack, 
+                            contentDescription = "Voltar",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
-            }
+            )
         },
         bottomBar = { BottomNavBar(nav) }
     ) { padding ->
@@ -79,38 +84,33 @@ fun PedidoConfirmadoScreen(
         when {
             loading -> {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding),
+                    modifier = Modifier.fillMaxSize().padding(padding),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator()
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 }
             }
 
             error != null -> {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding),
+                    modifier = Modifier.fillMaxSize().padding(padding),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(text = "Erro: $error", color = Color.Red)
+                    Text(text = "Erro: $error", color = MaterialTheme.colorScheme.error)
                 }
             }
 
             pedido != null -> {
                 val p = pedido!!
-
                 val itens = p.itens ?: emptyList()
-                val total = p.total ?: itens.sumOf { (it.preco ?: 0.0) * (it.quantidade ?: 0) }
-                val codigo = p.codigoRetirada?.takeIf { it.isNotBlank() } ?: pedidoId
+                val total = p.total
+                val codigo = p.codigoRetirada.takeIf { it.isNotBlank() } ?: pedidoId
 
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(padding)
-                        .background(Color.White)
+                        .background(MaterialTheme.colorScheme.background)
                         .verticalScroll(rememberScrollState())
                         .padding(horizontal = 24.dp)
                 ) {
@@ -120,13 +120,13 @@ fun PedidoConfirmadoScreen(
                         text = "Pedido #$codigo",
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = "Seu pedido foi confirmado e está sendo preparado. Você receberá uma notificação quando estiver pronto para retirada.",
                         fontSize = 14.sp,
-                        color = Color.Gray,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         lineHeight = 20.sp
                     )
 
@@ -136,49 +136,43 @@ fun PedidoConfirmadoScreen(
                         text = "Resumo do Pedido",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
 
-                    if (itens.isEmpty()) {
-                        Text("Sem itens no pedido.", color = Color.Gray)
-                    } else {
-                        itens.forEach { item ->
-                            val nome = item.nome ?: "Item"
-                            val qtd = item.quantidade ?: 0
-                            val preco = item.preco ?: 0.0
-                            val subtotal = preco * qtd
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.Top
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(text = nome, fontSize = 16.sp, color = Color.Black)
-                                    Text(text = "${qtd}x", fontSize = 14.sp, color = Color(0xFF4CAF50))
-                                }
-                                Text(
-                                    text = formatMoney(subtotal),
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
+                    itens.forEach { item ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.Top
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(text = item.nome, fontSize = 16.sp, color = MaterialTheme.colorScheme.onBackground)
+                                Text(text = "1x", fontSize = 14.sp, color = MaterialTheme.colorScheme.primary)
                             }
-                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                text = "R$ ${String.format("%.2f", item.preco ?: 0.0)}",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
                         }
+                        Spacer(modifier = Modifier.height(12.dp))
                     }
 
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(text = "Total", fontSize = 16.sp, color = Color.Gray)
+                        Text(text = "Total", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text(
-                            text = formatMoney(total),
+                            text = "R$ ${String.format("%.2f", total)}",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.Black
+                            color = MaterialTheme.colorScheme.onBackground
                         )
                     }
 
@@ -188,6 +182,7 @@ fun PedidoConfirmadoScreen(
                         text = "Detalhes da Retirada",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
 
@@ -207,33 +202,13 @@ fun PedidoConfirmadoScreen(
 
                     Spacer(modifier = Modifier.height(32.dp))
 
-                    // Aqui fica aluno: não é "pagar", pq pagar é do cantineiro.
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    Button(
+                        onClick = { nav.navigate("dailyMenu") },
+                        modifier = Modifier.fillMaxWidth().height(56.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                        shape = RoundedCornerShape(12.dp)
                     ) {
-                        OutlinedButton(
-                            onClick = { nav.navigate("dailyMenu") },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(60.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
-                        ) {
-                            Text("Escolher mais opções")
-                        }
-
-                        Button(
-                            onClick = { nav.navigate("homeAluno") },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(60.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
-                            shape = RoundedCornerShape(12.dp),
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
-                        ) {
-                            Text("Voltar ao menu", color = Color.Black, fontWeight = FontWeight.Bold)
-                        }
+                        Text("Voltar ao cardápio", color = Color.Black, fontWeight = FontWeight.Bold)
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
@@ -248,19 +223,16 @@ private fun PickupDetailRow(title: String, value: String, icon: ImageVector) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFFF9F9F9), RoundedCornerShape(8.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp))
             .padding(16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column {
-            Text(text = title, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+            Text(text = title, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
             Spacer(modifier = Modifier.height(4.dp))
-            Text(text = value, fontSize = 14.sp, color = Color(0xFF4CAF50))
+            Text(text = value, fontSize = 14.sp, color = MaterialTheme.colorScheme.primary)
         }
-        Icon(imageVector = icon, contentDescription = null, tint = Color.Black)
+        Icon(imageVector = icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface)
     }
 }
-
-private fun formatMoney(v: Double): String =
-    "R$ %.2f".format(v).replace('.', ',')
