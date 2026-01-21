@@ -37,10 +37,10 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.example.edusnack.data.AuthRepository
-import com.example.edusnack.model.Aluno
 import com.example.edusnack.model.Pedido
-import com.example.edusnack.ui.components.ParentBottomNavBar // IMPORT FORÇADO
+import com.example.edusnack.ui.components.ParentBottomNavBar
 import com.example.edusnack.ui.theme.GreenPrimary
+import com.example.edusnack.viewmodel.DependentUi
 import com.example.edusnack.viewmodel.ParentViewModel
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -53,7 +53,7 @@ import java.util.Locale
 @Composable
 fun ParentAccountScreen(nav: NavController, vm: ParentViewModel = viewModel()) {
     val user by vm.user.collectAsState()
-    val children by vm.children.collectAsState()
+    val dependents by vm.dependentsUi.collectAsState()
     val recentOrders by vm.recentOrders.collectAsState()
     val loading by vm.loading.collectAsState()
 
@@ -142,7 +142,7 @@ fun ParentAccountScreen(nav: NavController, vm: ParentViewModel = viewModel()) {
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
             )
         },
-        bottomBar = { ParentBottomNavBar(nav) } // CHAMADA FORÇADA
+        bottomBar = { ParentBottomNavBar(nav) }
     ) { padding ->
         if (loading) {
             Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
@@ -211,12 +211,12 @@ fun ParentAccountScreen(nav: NavController, vm: ParentViewModel = viewModel()) {
                     ParentSectionTitle(text = "Meus Dependentes")
                 }
 
-                if (children.isEmpty()) {
+                if (dependents.isEmpty()) {
                     item {
                         Text("Nenhum dependente encontrado.", color = Color.Gray, fontSize = 14.sp)
                     }
                 } else {
-                    items(children) { child ->
+                    items(dependents) { child ->
                         ChildDependentRow(child)
                         Spacer(modifier = Modifier.height(16.dp))
                     }
@@ -258,7 +258,7 @@ fun ParentSectionTitle(text: String) {
 }
 
 @Composable
-fun ChildDependentRow(child: Aluno) {
+fun ChildDependentRow(child: DependentUi) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
@@ -267,14 +267,14 @@ fun ChildDependentRow(child: Aluno) {
             modifier = Modifier
                 .size(60.dp)
                 .clip(CircleShape)
-                .background(Color(0xFFFFE0B2)),
+                .background(MaterialTheme.colorScheme.surfaceVariant),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = "Foto de ${child.nomeCompleto}",
-                modifier = Modifier.size(40.dp),
-                tint = Color(0xFF795548)
+            AsyncImage(
+                model = child.fotoUrl ?: "https://placehold.co/200x200/png?text=${child.nome.take(1)}",
+                contentDescription = "Foto de ${child.nome}",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
             )
         }
 
@@ -282,14 +282,14 @@ fun ChildDependentRow(child: Aluno) {
 
         Column {
             Text(
-                text = child.nomeCompleto,
+                text = child.nome,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.padding(bottom = 4.dp)
             )
             Text(
-                text = "Turma: ${child.anoOuTurma}",
+                text = "Turma: ${child.turma} | Saldo: R$ ${String.format("%.2f", child.saldo)}",
                 fontSize = 14.sp,
                 color = Color(0xFF4CAF50)
             )

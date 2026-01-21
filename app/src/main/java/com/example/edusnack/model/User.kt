@@ -7,5 +7,7 @@ data class User(
     val tipo: String = "", // aluno | responsavel | cantina
     val fotoUrl: String = "",
     val responsavelId: String? = null, // ID do pai/mãe vinculado
-    val matricula: String? = null // Matrícula opcional
+    val matricula: String? = null, // Matrícula opcional
+    val saldo: Double = 0.0,
+    val anoOuTurma: String = ""
 )

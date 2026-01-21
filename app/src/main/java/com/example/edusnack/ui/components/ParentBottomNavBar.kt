@@ -7,7 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Payments
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.People
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -28,16 +28,20 @@ fun ParentBottomNavBar(nav: NavController) {
             .padding(vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
-        ParentBottomItem("Início", Icons.Default.Home) {
-            nav.navigate("parentAccount")
+        // CORREÇÃO: "Início" agora leva para a tela de dependentes, que é a sua tela principal
+        ParentBottomItem("Início", Icons.Default.People) {
+            nav.navigate("myDependents") {
+                popUpTo("myDependents") { inclusive = true }
+            }
         }
 
         ParentBottomItem("Créditos", Icons.Default.Payments) {
             nav.navigate("addCredit")
         }
 
-        ParentBottomItem("Conta", Icons.Default.Person) {
-            nav.navigate("parentAccount") // Ou uma tela de perfil do pai se existir
+        // Alterado para "Conta" levar para o resumo financeiro (ParentAccount)
+        ParentBottomItem("Conta", Icons.Default.Home) {
+            nav.navigate("parentAccount")
         }
 
         ParentBottomItem("Extrato", Icons.Default.History) {

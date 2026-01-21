@@ -93,17 +93,33 @@ class PedidoViewModel(
     fun markAsDelivered(orderId: String) {
         viewModelScope.launch {
             try {
-                db.collection("pedidos")
-                    .document(orderId)
-                    .update(
-                        mapOf(
-                            "status" to StatusPedido.ENTREGUE.name,
-                            "entregueEm" to FieldValue.serverTimestamp()
-                        )
-                    )
-                    .await()
+                // 1. Buscar dados do pedido para saber quem é o aluno e qual o valor
+                val orderSnap = db.collection("pedidos").document(orderId).get().await()
+                val pedido = orderSnap.toObject(Pedido::class.java) ?: return@launch
+                val alunoId = pedido.alunoId
+                val totalPedido = pedido.total
+
+                // 2. Executar transação para garantir que o saldo seja descontado apenas se a entrega for confirmada
+                db.runTransaction { transaction ->
+                    val alunoRef = db.collection("usuarios").document(alunoId)
+                    val alunoSnap = transaction.get(alunoRef)
+                    
+                    val saldoAtual = alunoSnap.getDouble("saldo") ?: 0.0
+                    val novoSaldo = saldoAtual - totalPedido
+
+                    // Atualiza saldo do aluno
+                    transaction.update(alunoRef, "saldo", novoSaldo)
+                    
+                    // Atualiza status do pedido
+                    val pedidoRef = db.collection("pedidos").document(orderId)
+                    transaction.update(pedidoRef, mapOf(
+                        "status" to StatusPedido.ENTREGUE.name,
+                        "entregueEm" to FieldValue.serverTimestamp()
+                    ))
+                }.await()
+
             } catch (e: Exception) {
-                _error.value = e.message
+                _error.value = "Erro ao processar entrega: ${e.message}"
             }
         }
     }
@@ -114,13 +130,12 @@ class PedidoViewModel(
                 _loading.value = true
                 _error.value = null
 
-                FirebaseFirestore.getInstance()
-                    .collection("pedidos")
+                db.collection("pedidos")
                     .document(pedidoId)
                     .update(
                         mapOf(
                             "status" to StatusPedido.CANCELADO.name,
-                            "canceladoEm" to Timestamp.now(),
+                            "canceladoEm" to FieldValue.serverTimestamp(),
                             "canceladoPor" to "CANTINEIRO"
                         )
                     )
@@ -133,8 +148,6 @@ class PedidoViewModel(
             }
         }
     }
-
-
 
     fun clearError() {
         _error.value = null

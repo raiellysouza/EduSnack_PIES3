@@ -29,8 +29,8 @@ class StudentAccountViewModel(
     private val _user = MutableStateFlow<User?>(null)
     val user: StateFlow<User?> = _user
 
-    private val _alunoInfo = MutableStateFlow<Aluno?>(null)
-    val alunoInfo: StateFlow<Aluno?> = _alunoInfo
+    private val _alunoInfo = MutableStateFlow<User?>(null)
+    val alunoInfo: StateFlow<User?> = _alunoInfo
 
     private val _transactions = MutableStateFlow<List<StudentTransaction>>(emptyList())
     val transactions: StateFlow<List<StudentTransaction>> = _transactions
@@ -39,6 +39,7 @@ class StudentAccountViewModel(
     val loading: StateFlow<Boolean> = _loading
 
     private var pedidosListener: ListenerRegistration? = null
+    private var userInfoListener: ListenerRegistration? = null
 
     init {
         loadData()
@@ -51,27 +52,22 @@ class StudentAccountViewModel(
             _user.value = currentUser
 
             currentUser?.let { user ->
-                fetchAlunoInfo(user.id)
+                startUserInfoListener(user.id) // Escuta o saldo em tempo real
                 startPedidosListener(user.id)
             }
             _loading.value = false
         }
     }
 
-    private suspend fun fetchAlunoInfo(userId: String) {
-        try {
-            val snapshot = FirebaseFirestore.getInstance()
-                .collection("alunos")
-                .document(userId)
-                .get()
-                .await()
-            
-            if (snapshot.exists()) {
-                _alunoInfo.value = snapshot.toObject(Aluno::class.java)
+    private fun startUserInfoListener(userId: String) {
+        userInfoListener?.remove()
+        userInfoListener = FirebaseFirestore.getInstance()
+            .collection("usuarios")
+            .document(userId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) return@addSnapshotListener
+                _alunoInfo.value = snapshot?.toObject(User::class.java)
             }
-        } catch (e: Exception) {
-            _alunoInfo.value = null
-        }
     }
 
     private fun startPedidosListener(userId: String) {
@@ -80,8 +76,6 @@ class StudentAccountViewModel(
         pedidosListener = FirebaseFirestore.getInstance()
             .collection("pedidos")
             .whereEqualTo("alunoId", userId)
-            // Filtramos aqui para garantir que a lista seja atualizada em tempo real
-            // assim que o status mudar para ENTREGUE no banco
             .orderBy("data", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) return@addSnapshotListener
@@ -90,7 +84,6 @@ class StudentAccountViewModel(
                     val list = docs.documents.mapNotNull { doc ->
                         val pedido = doc.toObject(Pedido::class.java) ?: return@mapNotNull null
                         
-                        // FILTRO: Mostrar apenas pedidos que já foram entregues
                         if (pedido.status != StatusPedido.ENTREGUE) return@mapNotNull null
                         
                         val data = pedido.data.toDate().let { d ->
@@ -114,5 +107,6 @@ class StudentAccountViewModel(
     override fun onCleared() {
         super.onCleared()
         pedidosListener?.remove()
+        userInfoListener?.remove()
     }
 }
