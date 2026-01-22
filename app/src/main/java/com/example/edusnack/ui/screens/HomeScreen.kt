@@ -16,6 +16,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.edusnack.model.Cardapio
@@ -26,7 +27,11 @@ import java.time.LocalDate
 
 
 @Composable
-fun HomeScreen(nav: NavController, cardapioVm: CardapioViewModel, carrinhoVm: CarrinhoViewModel) {
+fun HomeScreen(
+    nav: NavController,
+    cardapioVm: CardapioViewModel = viewModel(),
+    carrinhoVm: CarrinhoViewModel = viewModel()
+) {
     val itens by cardapioVm.itens.collectAsState()
     val categorias by cardapioVm.categorias.collectAsState()
     
