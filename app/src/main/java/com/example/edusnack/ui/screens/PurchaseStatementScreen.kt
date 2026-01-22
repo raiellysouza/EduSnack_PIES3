@@ -14,34 +14,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.edusnack.ui.components.ParentBottomNavBar
 import com.example.edusnack.ui.theme.GreenPrimary
-
-// Modelo de dados simples para as transações
-data class PurchaseTransaction(
-    val title: String,
-    val studentName: String,
-    val date: String,
-    val price: String
-)
+import com.example.edusnack.viewmodel.PurchaseTransaction
+import com.example.edusnack.viewmodel.StatementViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PurchaseStatementScreen(nav: NavController) {
-    // Lista de transações baseada na imagem enviada
-    val transactions = listOf(
-        PurchaseTransaction("Sanduíche de Frango", "Aluno 1", "12/07/2024 14:30", "R$ 8,50"),
-        PurchaseTransaction("Suco de Laranja", "Aluno 2", "12/07/2024 12:15", "R$ 4,00"),
-        PurchaseTransaction("Biscoito de Chocolate", "Aluno 1", "11/07/2024 15:45", "R$ 3,00"),
-        PurchaseTransaction("Salada de Frutas", "Aluno 2", "11/07/2024 11:00", "R$ 6,00")
-    )
+fun PurchaseStatementScreen(
+    nav: NavController,
+    vm: StatementViewModel = viewModel()
+) {
+    val transactions by vm.transactions.collectAsState()
+    val students by vm.students.collectAsState()
+    val loading by vm.loading.collectAsState()
 
-    // Estado para o filtro (Todos, Aluno 1, Aluno 2)
     var selectedFilter by remember { mutableStateOf("Todos") }
 
     Scaffold(
@@ -82,14 +73,19 @@ fun PurchaseStatementScreen(nav: NavController) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // --- Filtros (Botões superiores) ---
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                StatementFilterChip(text = "Todos", selected = selectedFilter == "Todos") { selectedFilter = "Todos" }
-                StatementFilterChip(text = "Aluno 1", selected = selectedFilter == "Aluno 1") { selectedFilter = "Aluno 1" }
-                StatementFilterChip(text = "Aluno 2", selected = selectedFilter == "Aluno 2") { selectedFilter = "Aluno 2" }
+            // --- Filtros ---
+            if (students.size > 1) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    students.forEach { student ->
+                        StatementFilterChip(
+                            text = student,
+                            selected = selectedFilter == student
+                        ) { selectedFilter = student }
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -103,22 +99,35 @@ fun PurchaseStatementScreen(nav: NavController) {
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            // --- Lista de Transações ---
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(24.dp),
-                contentPadding = PaddingValues(bottom = 16.dp)
-            ) {
-                val filteredList = if (selectedFilter == "Todos") transactions else transactions.filter { it.studentName == selectedFilter }
+            if (loading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = GreenPrimary)
+                }
+            } else if (transactions.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Nenhuma transação encontrada.", color = Color.Gray)
+                }
+            } else {
+                // --- Lista de Transações ---
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(24.dp),
+                    contentPadding = PaddingValues(bottom = 16.dp)
+                ) {
+                    val filteredList = if (selectedFilter == "Todos") {
+                        transactions
+                    } else {
+                        transactions.filter { it.studentName == selectedFilter }
+                    }
 
-                items(filteredList) { item ->
-                    TransactionRow(item)
+                    items(filteredList) { item ->
+                        TransactionRow(item)
+                    }
                 }
             }
         }
     }
 }
 
-// --- Componente: Botão de Filtro ---
 @Composable
 fun StatementFilterChip(text: String, selected: Boolean, onClick: () -> Unit) {
     Surface(
@@ -130,13 +139,12 @@ fun StatementFilterChip(text: String, selected: Boolean, onClick: () -> Unit) {
             text = text,
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
-            color = if (selected) Color.Black else MaterialTheme.colorScheme.onSurfaceVariant,
+            color = if (selected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
         )
     }
 }
 
-// --- Componente: Linha da Transação ---
 @Composable
 fun TransactionRow(item: PurchaseTransaction) {
     Row(
@@ -144,7 +152,6 @@ fun TransactionRow(item: PurchaseTransaction) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.Top
     ) {
-        // Coluna da Esquerda (Nome do item, Aluno, Data)
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = item.title,
@@ -162,11 +169,10 @@ fun TransactionRow(item: PurchaseTransaction) {
             Text(
                 text = item.date,
                 fontSize = 12.sp,
-                color = GreenPrimary
+                color = Color.Gray
             )
         }
 
-        // Coluna da Direita (Preço)
         Text(
             text = item.price,
             fontSize = 16.sp,
@@ -174,10 +180,4 @@ fun TransactionRow(item: PurchaseTransaction) {
             color = MaterialTheme.colorScheme.onBackground
         )
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PurchaseStatementPreview() {
-    PurchaseStatementScreen(nav = rememberNavController())
 }
