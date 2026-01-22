@@ -25,6 +25,8 @@ fun AppNavGraph(start: String = "welcome", themeViewModel: ThemeViewModel) {
         composable("login") { LoginScreen(navController) }
         composable("register") { RegisterScreen(navController) }
         composable("forgot") { ForgotPasswordScreen(navController) }
+        composable("homeAluno") { DailyMenuScreen(navController) }
+
 
         composable(
             route = "register_data/{tipo}",
