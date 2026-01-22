@@ -13,35 +13,25 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.example.edusnack.model.Cardapio
 import com.example.edusnack.ui.components.BottomNavBar
 import com.example.edusnack.viewmodel.CardapioViewModel
 
-// Cores extraídas da imagem
+// Cores
 val GreenText = Color(0xFF4CAF50)
-val LightGrayDivider = Color(0xFFEEEEEE)
-
-data class MenuItemData(
-    val id: String,
-    val title: String,
-    val description: String,
-    val price: Double,
-    val imageUrl: String,
-    val calories: Int,
-    val allergens: String,
-    val tag: String? = null
-)
+val VeganColor = Color(0xFF4CAF50)
+val GlutenColor = Color(0xFFF44336)
+val LactoseColor = Color(0xFF2196F3)
 
 @Composable
 fun DailyMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
-    val tabs = listOf("Salgados", "Bebidas", "Bolos", "Lanches")
+    val tabs = listOf("Lanches", "Bebidas", "Bolos", "Salgados")
     var selectedTab by remember { mutableIntStateOf(0) } 
     val itens by vm.itens.collectAsState()
 
@@ -55,34 +45,34 @@ fun DailyMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
 
     Scaffold(
         topBar = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surface)
-                    .padding(top = 16.dp)
-            ) {
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    Text(
-                        text = "Menu Diário",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
+            Surface(shadowElevation = 2.dp) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surface)
+                        .padding(top = 16.dp)
                 ) {
-                    tabs.forEachIndexed { index, title ->
-                        MenuTabItem(title, selected = selectedTab == index) { 
-                            selectedTab = index 
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        Text(
+                            text = "Menu Diário",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        tabs.forEachIndexed { index, title ->
+                            MenuTabItem(title, selected = selectedTab == index) { 
+                                selectedTab = index 
+                            }
                         }
                     }
                 }
-
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 2.dp)
             }
         },
         bottomBar = { BottomNavBar(nav) },
@@ -93,9 +83,9 @@ fun DailyMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 24.dp)
+                .padding(horizontal = 16.dp)
         ) {
-            item { Spacer(modifier = Modifier.height(24.dp)) }
+            item { Spacer(modifier = Modifier.height(16.dp)) }
 
             item {
                 Text(
@@ -103,156 +93,127 @@ fun DailyMenuScreen(nav: NavController, vm: CardapioViewModel = viewModel()) {
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(bottom = 16.dp)
+                    modifier = Modifier.padding(bottom = 16.dp, start = 4.dp)
                 )
             }
 
             if (itens.isEmpty()) {
                 item {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 32.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
+                    Box(Modifier.fillMaxWidth().padding(top = 40.dp), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator(color = GreenText)
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text("Carregando menu...", color = GreenText, fontSize = 14.sp)
                     }
                 }
-                item { Spacer(modifier = Modifier.height(24.dp)) }
                 return@LazyColumn
             }
 
             if (filtrados.isEmpty()) {
                 item {
                     Text(
-                        text = "Nenhum item cadastrado para $categoriaSelecionada.",
-                        color = GreenText,
-                        fontSize = 14.sp
+                        text = "Nenhum item em $categoriaSelecionada.",
+                        color = Color.Gray,
+                        modifier = Modifier.padding(start = 4.dp)
                     )
                 }
-                item { Spacer(modifier = Modifier.height(24.dp)) }
                 return@LazyColumn
             }
 
             items(filtrados.size) { idx ->
                 val item = filtrados[idx]
-                val ui = item.toMenuItemData()
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { nav.navigate("detalhes/${ui.id}") }
-                ) {
-                    FullDetailCard(data = ui)
+                CompactMenuItemCard(item = item) {
+                    nav.navigate("detalhes/${item.id}")
                 }
-
-                Spacer(modifier = Modifier.height(24.dp))
+                HorizontalDivider(
+                    modifier = Modifier.padding(vertical = 12.dp),
+                    thickness = 0.5.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                )
             }
 
-            item { Spacer(modifier = Modifier.height(24.dp)) }
+            item { Spacer(modifier = Modifier.height(80.dp)) }
         }
     }
-}
-
-private fun Cardapio.toMenuItemData(): MenuItemData {
-    val allergens = buildList {
-        if (possuiLactose) add("Laticínios")
-        if (possuiGluten) add("Glúten")
-    }.let { if (it.isEmpty()) "Nenhum" else it.joinToString(", ") }
-
-    val tag = when {
-        vegano -> "Vegano"
-        vegetariano -> "Vegetariano"
-        else -> null
-    }
-
-    return MenuItemData(
-        id = id,
-        title = nome,
-        description = descricao,
-        price = preco ?: 0.0,
-        imageUrl = imagemUrl ?: "",
-        calories = calorias ?: 0,
-        allergens = allergens,
-        tag = tag
-    )
 }
 
 @Composable
-fun FullDetailCard(data: MenuItemData) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
-                if (data.tag != null) {
-                    Text(
-                        text = data.tag,
-                        color = GreenText,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(bottom = 2.dp)
-                    )
+fun CompactMenuItemCard(item: Cardapio, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.Top
+    ) {
+        Column(modifier = Modifier.weight(1f).padding(end = 16.dp)) {
+            Text(
+                text = item.nome,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            Text(
+                text = item.descricao,
+                color = Color.Gray,
+                fontSize = 13.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                lineHeight = 18.sp
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Linha de Restrições e Preço
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Restrições (Chips)
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    if (item.vegano) DietaryChip(text = "Vegano", color = VeganColor)
+                    if (item.possuiGluten) DietaryChip(text = "Glúten", color = GlutenColor)
+                    if (item.possuiLactose) DietaryChip(text = "Lactose", color = LactoseColor)
                 }
 
                 Text(
-                    text = data.title,
-                    fontSize = 16.sp,
+                    text = "R$ %.2f".format(item.preco ?: 0.0).replace('.', ','),
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(bottom = 4.dp)
-                )
-
-                Text(
-                    text = data.description,
-                    color = GreenText,
-                    fontSize = 13.sp,
-                    lineHeight = 18.sp,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    fontSize = 15.sp,
+                    color = GreenText
                 )
             }
-
-            AsyncImage(
-                model = data.imageUrl,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .width(100.dp)
-                    .height(70.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-            )
         }
 
-        HorizontalDivider(
-            modifier = Modifier.padding(vertical = 12.dp),
-            thickness = 1.dp,
-            color = MaterialTheme.colorScheme.outlineVariant
+        AsyncImage(
+            model = item.imagemUrl,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .size(80.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant)
         )
+    }
+}
 
-        Row(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.weight(0.4f)) {
-                Text("Calorias", color = GreenText, fontSize = 12.sp)
-                Text("${data.calories}", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onBackground)
-            }
-            Column(modifier = Modifier.weight(0.6f)) {
-                Text("Alérgenos", color = GreenText, fontSize = 12.sp)
-                Text(data.allergens, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onBackground)
-            }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Column {
-            Text("Preço", color = GreenText, fontSize = 12.sp)
+@Composable
+fun DietaryChip(text: String, color: Color) {
+    Surface(
+        color = color.copy(alpha = 0.1f),
+        shape = RoundedCornerShape(4.dp),
+        modifier = Modifier.height(20.dp)
+    ) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 6.dp)) {
             Text(
-                text = "R$ %.2f".format(data.price).replace('.', ','),
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp,
-                color = MaterialTheme.colorScheme.onBackground
+                text = text,
+                color = color,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold
             )
         }
     }
@@ -263,23 +224,23 @@ fun MenuTabItem(text: String, selected: Boolean, onClick: () -> Unit) {
     Column(
         modifier = Modifier
             .clickable { onClick() }
-            .padding(horizontal = 8.dp),
+            .padding(horizontal = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             text = text,
-            color = if (selected) MaterialTheme.colorScheme.onSurface else GreenText.copy(alpha = 0.7f),
-            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+            color = if (selected) GreenText else Color.Gray,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
             fontSize = 14.sp,
-            modifier = Modifier.padding(bottom = 8.dp)
+            modifier = Modifier.padding(bottom = 6.dp)
         )
 
         if (selected) {
             Box(
                 modifier = Modifier
-                    .width(40.dp)
+                    .width(30.dp)
                     .height(3.dp)
-                    .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(2.dp))
+                    .background(GreenText, RoundedCornerShape(2.dp))
             )
         } else {
             Spacer(modifier = Modifier.height(3.dp))
