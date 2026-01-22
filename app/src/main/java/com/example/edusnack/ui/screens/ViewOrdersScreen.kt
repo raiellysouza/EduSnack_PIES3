@@ -46,7 +46,7 @@ fun ViewOrdersScreen(nav: NavController, vm: PedidoViewModel = viewModel()) {
 
     // 0: Pendentes, 1: Preparando, 2: Prontos, 3: Entregues, 4: Cancelados
     var selectedStatusTab by remember { mutableIntStateOf(0) }
-    val statusTabs = listOf("Pendentes", "Preparando", "Prontos", "Entregues", "Cancelados")
+    val statusTabs = listOf("Pendentes", "Entregues", "Cancelados")
 
     var searchText by remember { mutableStateOf("") }
     val query = searchText.trim().lowercase()
@@ -60,14 +60,12 @@ fun ViewOrdersScreen(nav: NavController, vm: PedidoViewModel = viewModel()) {
 
     fun statusSelecionado(): StatusPedido = when (selectedStatusTab) {
         0 -> StatusPedido.PENDENTE
-        1 -> StatusPedido.PREPARANDO
-        2 -> StatusPedido.PRONTO
         3 -> StatusPedido.ENTREGUE
         else -> StatusPedido.CANCELADO
     }
 
     fun timeFilterOK(p: Pedido): Boolean {
-        if (selectedTimeTab == 2) return true 
+        if (selectedTimeTab == 2) return true
 
         val cal = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, 0)
@@ -244,8 +242,6 @@ fun ViewOrdersScreen(nav: NavController, vm: PedidoViewModel = viewModel()) {
                                     pedidos.forEach { pedido ->
                                         PedidoCardPrototype(
                                             pedido = pedido,
-                                            onSetPreparando = { vm.updateStatus(pedido.id, StatusPedido.PREPARANDO) },
-                                            onSetPronto = { vm.updateStatus(pedido.id, StatusPedido.PRONTO) },
                                             onSetEntregue = { vm.markAsDelivered(pedido.id) },
                                             onCancelar = { vm.cancelOrder(pedido.id) }
                                         )
@@ -288,8 +284,6 @@ private fun SeriesHeader(title: String, count: Int, expanded: Boolean, onToggle:
 @Composable
 private fun PedidoCardPrototype(
     pedido: Pedido,
-    onSetPreparando: () -> Unit,
-    onSetPronto: () -> Unit,
     onSetEntregue: () -> Unit,
     onCancelar: () -> Unit
 ) {
@@ -338,11 +332,6 @@ private fun PedidoCardPrototype(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        StatusChipsPrototype(
-            status = pedido.status,
-            onPreparando = onSetPreparando,
-            onPronto = onSetPronto
-        )
 
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -383,83 +372,6 @@ private fun PedidoCardPrototype(
     }
 }
 
-@Composable
-private fun StatusChipsPrototype(
-    status: StatusPedido,
-    onPreparando: () -> Unit,
-    onPronto: () -> Unit
-) {
-    val podeClicarPreparando = status == StatusPedido.PENDENTE || status == StatusPedido.PREPARANDO
-    val podeClicarPronto = status == StatusPedido.PREPARANDO || status == StatusPedido.PRONTO
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(46.dp)
-            .clip(RoundedCornerShape(999.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .padding(4.dp)
-    ) {
-        StatusChipPrototype(
-            label = "Preparando",
-            selected = status == StatusPedido.PREPARANDO,
-            enabled = podeClicarPreparando,
-            shape = RoundedCornerShape(topStart = 999.dp, bottomStart = 999.dp, topEnd = 0.dp, bottomEnd = 0.dp),
-            modifier = Modifier.weight(1f),
-            onClick = onPreparando
-        )
-
-        Box(modifier = Modifier.fillMaxHeight().width(1.dp).background(MaterialTheme.colorScheme.outlineVariant))
-
-        StatusChipPrototype(
-            label = "Pronto",
-            selected = status == StatusPedido.PRONTO,
-            enabled = podeClicarPronto,
-            shape = RoundedCornerShape(topStart = 0.dp, bottomStart = 0.dp, topEnd = 999.dp, bottomEnd = 999.dp),
-            modifier = Modifier.weight(1f),
-            onClick = onPronto
-        )
-    }
-}
-
-@Composable
-private fun StatusChipPrototype(
-    label: String,
-    selected: Boolean,
-    enabled: Boolean,
-    shape: RoundedCornerShape,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    val interaction = remember { MutableInteractionSource() }
-    val pressed by interaction.collectIsPressedAsState()
-
-    val textColor = when {
-        !enabled -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-        selected -> MaterialTheme.colorScheme.primary
-        else -> MaterialTheme.colorScheme.onSurfaceVariant
-    }
-
-    val bg = if (selected) MaterialTheme.colorScheme.surface else Color.Transparent
-
-    Surface(
-        color = bg,
-        shape = shape,
-        shadowElevation = if (selected) 2.dp else 0.dp,
-        border = if (selected) BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant) else null,
-        modifier = modifier
-            .fillMaxHeight()
-            .clickable(
-                enabled = enabled,
-                interactionSource = interaction,
-                indication = LocalIndication.current
-            ) { onClick() }
-    ) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(text = label, color = textColor, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-        }
-    }
-}
 
 @Composable
 private fun ActionButtonPrototype(
