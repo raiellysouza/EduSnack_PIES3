@@ -60,39 +60,40 @@ class CarrinhoViewModel(
                     return@launch
                 }
 
-                var ultimoId: String? = null
-
-                // CORREÇÃO: Para cada item e cada dia selecionado, criamos um pedido individual
-                _itens.value.forEach { ci ->
-                    val diasParaProcessar = if (ci.diasReserva.isEmpty()) listOf("") else ci.diasReserva
-                    
-                    diasParaProcessar.forEach { dia ->
-                        val itemPedido = ItemPedido(
-                            itemId = ci.item.id,
-                            nome = ci.item.nome,
-                            preco = ci.item.preco,
-                            quantidade = 1,
-                            preparoNaHora = false,
-                            diasReserva = if (dia.isEmpty()) emptyList() else listOf(dia)
-                        )
-
-                        val pedido = Pedido(
-                            alunoId = usuarioId,
-                            alunoNome = "", // Preenchido pelo back ou em outra etapa
-                            turma = "",      
-                            itens = listOf(itemPedido),
-                            status = StatusPedido.PENDENTE,
-                            total = ci.item.preco ?: 0.0, // Valor individual por dia
-                            codigoRetirada = gerarCodigoRetirada()
-                        )
-
-                        val res = pedidoRepo.salvarPedido(pedido)
-                        ultimoId = res.getOrNull()
-                    }
+                // Construir um único pedido agregando todos os itens do carrinho
+                val itensPedido = _itens.value.map { ci ->
+                    ItemPedido(
+                        itemId = ci.item.id,
+                        nome = ci.item.nome,
+                        preco = ci.item.preco,
+                        quantidade = ci.quantidade,
+                        preparoNaHora = false,
+                        diasReserva = ci.diasReserva
+                    )
                 }
 
+                // Calcular total considerando diasReserva (cada dia conta como uma unidade)
+                val totalPedido = _itens.value.sumOf { ci ->
+                    val unidades = if (ci.diasReserva.isNotEmpty()) ci.diasReserva.size else ci.quantidade
+                    (ci.item.preco ?: 0.0) * unidades
+                }
+
+                val pedido = Pedido(
+                    alunoId = usuarioId,
+                    alunoNome = "", // Preenchido pelo repositório se necessário
+                    turma = "",
+                    itens = itensPedido,
+                    status = StatusPedido.PENDENTE,
+                    total = totalPedido,
+                    codigoRetirada = gerarCodigoRetirada()
+                )
+
+                val res = pedidoRepo.salvarPedido(pedido)
+                val ultimoId = res.getOrNull()
+
                 limpar()
-                onDone(ultimoId) // Retornamos o último ID para a tela de confirmação
+                onDone(ultimoId)
+
             } catch (e: Exception) {
                 onDone(null)
             }

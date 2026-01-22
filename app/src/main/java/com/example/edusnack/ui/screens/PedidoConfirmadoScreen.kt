@@ -141,6 +141,11 @@ fun PedidoConfirmadoScreen(
                     )
 
                     itens.forEach { item ->
+                        // calcular quantidade exibida: se houver diasReserva, cada dia conta como uma unidade
+                        val unidades = if (item.diasReserva.isNotEmpty()) item.diasReserva.size else item.quantidade
+                        val precoUnit = item.preco ?: 0.0
+                        val subtotalItem = precoUnit * unidades
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -148,14 +153,24 @@ fun PedidoConfirmadoScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(text = item.nome, fontSize = 16.sp, color = MaterialTheme.colorScheme.onBackground)
-                                Text(text = "1x", fontSize = 14.sp, color = MaterialTheme.colorScheme.primary)
+                                Text(text = "${unidades}x", fontSize = 14.sp, color = MaterialTheme.colorScheme.primary)
+                                if (item.diasReserva.isNotEmpty()) {
+                                    Text(text = "Reservado: ${item.diasReserva.joinToString(", ")}", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
                             }
-                            Text(
-                                text = "R$ ${String.format("%.2f", item.preco ?: 0.0)}",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
+                            Column(horizontalAlignment = Alignment.End) {
+                                Text(
+                                    text = "R$ ${String.format("%.2f", precoUnit)}",
+                                    fontSize = 14.sp,
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                                Text(
+                                    text = "R$ ${String.format("%.2f", subtotalItem)}",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                            }
                         }
                         Spacer(modifier = Modifier.height(12.dp))
                     }
