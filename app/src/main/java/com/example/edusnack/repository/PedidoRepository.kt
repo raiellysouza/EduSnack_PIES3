@@ -2,6 +2,7 @@ package com.example.edusnack.repository
 
 import com.example.edusnack.model.Pedido
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
 
 class PedidoRepository(
@@ -15,6 +16,20 @@ class PedidoRepository(
         Result.success(snap.toObject(Pedido::class.java))
     } catch (e: Exception) {
         Result.failure(e)
+    }
+
+    suspend fun buscarPedidosPorAlunos(alunoIds: List<String>): List<Pedido> = try {
+        if (alunoIds.isEmpty()) emptyList()
+        else {
+            val snap = pedidos
+                .whereIn("alunoId", alunoIds)
+                .orderBy("data", Query.Direction.DESCENDING)
+                .get()
+                .await()
+            snap.toObjects(Pedido::class.java)
+        }
+    } catch (e: Exception) {
+        emptyList()
     }
 
     suspend fun salvarPedido(pedido: Pedido): Result<String> = try {
