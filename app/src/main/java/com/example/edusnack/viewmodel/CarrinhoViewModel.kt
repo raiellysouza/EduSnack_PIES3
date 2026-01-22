@@ -20,6 +20,10 @@ class CarrinhoViewModel(
     private val _itens = MutableStateFlow<List<CarrinhoItem>>(emptyList())
     val itens = _itens.asStateFlow()
 
+    // Flag para controlar operação de salvamento e permitir feedback UI
+    private val _saving = MutableStateFlow(false)
+    val saving = _saving.asStateFlow()
+
     fun adicionar(item: Cardapio, dias: List<String> = emptyList()) {
         val atual = _itens.value
         val idx = atual.indexOfFirst { it.item.id == item.id && it.diasReserva == dias }
@@ -27,7 +31,7 @@ class CarrinhoViewModel(
         _itens.value = if (idx == -1) {
             atual + CarrinhoItem(item, quantidade = 1, diasReserva = dias)
         } else {
-            atual.mapIndexed { i, ci ->
+            _itens.value.mapIndexed { i, ci ->
                 if (i == idx) ci.copy(quantidade = ci.quantidade + 1) else ci
             }
         }
@@ -55,10 +59,23 @@ class CarrinhoViewModel(
     fun finalizarCompra(usuarioId: String, onDone: (String?) -> Unit) {
         viewModelScope.launch {
             try {
+                // evita dupla submissão
+                if (_saving.value) {
+                    onDone(null)
+                    return@launch
+                }
+
                 if (usuarioId.isBlank()) {
                     onDone(null)
                     return@launch
                 }
+
+                if (_itens.value.isEmpty()) {
+                    onDone(null)
+                    return@launch
+                }
+
+                _saving.value = true
 
                 // Construir um único pedido agregando todos os itens do carrinho
                 val itensPedido = _itens.value.map { ci ->
@@ -96,6 +113,8 @@ class CarrinhoViewModel(
 
             } catch (e: Exception) {
                 onDone(null)
+            } finally {
+                _saving.value = false
             }
         }
     }

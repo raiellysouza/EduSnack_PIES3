@@ -28,6 +28,7 @@ fun CarrinhoScreen(
     vm: CarrinhoViewModel
 ) {
     val itens by vm.itens.collectAsState()
+    val saving by vm.saving.collectAsState()
 
     val db = remember { FirebaseFirestore.getInstance() }
     var saldoDisponivel by remember { mutableStateOf<Double?>(null) }
@@ -172,8 +173,10 @@ fun CarrinhoScreen(
 
             Button(
                 onClick = {
-                    vm.finalizarCompra(usuarioId) { id ->
-                        if (id != null) nav.navigate("pedidoConfirmado/$id")
+                    if (!saving) {
+                        vm.finalizarCompra(usuarioId) { id ->
+                            if (id != null) nav.navigate("pedidoConfirmado/$id")
+                        }
                     }
                 },
                 modifier = Modifier
@@ -182,7 +185,11 @@ fun CarrinhoScreen(
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E676)),
                 shape = RoundedCornerShape(8.dp)
             ) {
-                Text("Confirmar Compra", color = Color.Black, fontWeight = FontWeight.Bold)
+                if (saving) {
+                    CircularProgressIndicator(color = Color.Black, modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                } else {
+                    Text("Confirmar Compra", color = Color.Black, fontWeight = FontWeight.Bold)
+                }
             }
 
             Spacer(Modifier.height(16.dp))
