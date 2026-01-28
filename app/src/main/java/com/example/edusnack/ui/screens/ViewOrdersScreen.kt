@@ -44,7 +44,7 @@ fun ViewOrdersScreen(nav: NavController, vm: PedidoViewModel = viewModel()) {
     var selectedTimeTab by remember { mutableIntStateOf(0) }
     val timeTabs = listOf("Hoje", "Semana", "Todos")
 
-    // 0: Pendentes, 1: Preparando, 2: Prontos, 3: Entregues, 4: Cancelados
+    // 0: Pendentes, 1: Entregues, 2: Cancelados
     var selectedStatusTab by remember { mutableIntStateOf(0) }
     val statusTabs = listOf("Pendentes", "Entregues", "Cancelados")
 
@@ -60,7 +60,7 @@ fun ViewOrdersScreen(nav: NavController, vm: PedidoViewModel = viewModel()) {
 
     fun statusSelecionado(): StatusPedido = when (selectedStatusTab) {
         0 -> StatusPedido.PENDENTE
-        3 -> StatusPedido.ENTREGUE
+        1 -> StatusPedido.ENTREGUE
         else -> StatusPedido.CANCELADO
     }
 
@@ -339,16 +339,18 @@ private fun PedidoCardPrototype(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            ActionButtonPrototype(
-                text = "Entregue hoje",
-                onClick = { onSetEntregue() },
-                modifier = Modifier.weight(1f)
-            )
-            ActionButtonPrototype(
-                text = "Cancelar",
-                onClick = { showConfirmCancel = true },
-                modifier = Modifier.weight(1f)
-            )
+            if (pedido.status != StatusPedido.ENTREGUE && pedido.status != StatusPedido.CANCELADO) {
+                ActionButtonPrototype(
+                    text = "Entregue hoje",
+                    onClick = { onSetEntregue() },
+                    modifier = Modifier.weight(1f)
+                )
+                ActionButtonPrototype(
+                    text = "Cancelar",
+                    onClick = { showConfirmCancel = true },
+                    modifier = Modifier.weight(1f)
+                )
+            }
         }
     }
 
