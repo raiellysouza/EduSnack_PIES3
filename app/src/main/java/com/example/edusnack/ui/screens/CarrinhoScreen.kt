@@ -28,13 +28,16 @@ fun CarrinhoScreen(
     vm: CarrinhoViewModel
 ) {
     val itens by vm.itens.collectAsState()
+    val error by vm.error.collectAsState()
 
     val db = remember { FirebaseFirestore.getInstance() }
     var saldoDisponivel by remember { mutableStateOf<Double?>(null) }
+    var processing by remember { mutableStateOf(false) }
 
     LaunchedEffect(usuarioId) {
         saldoDisponivel = try {
-            val docUsuarios = db.collection("alunos").document(usuarioId).get().await()
+            // Alterado para "usuarios" para manter consistência com o restante do app
+            val docUsuarios = db.collection("usuarios").document(usuarioId).get().await()
             docUsuarios.getDouble("saldo")
         } catch (_: Exception) {
             null
@@ -42,9 +45,19 @@ fun CarrinhoScreen(
     }
 
     val total = remember(itens) { vm.total() }
+    val saldoInsuficiente = saldoDisponivel != null && saldoDisponivel!! < total
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(error) {
+        error?.let {
+            snackbarHostState.showSnackbar(it)
+            vm.clearError()
+        }
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             Box(
                 modifier = Modifier
@@ -168,21 +181,45 @@ fun CarrinhoScreen(
                 value = saldoDisponivel?.let { money(it) } ?: "—"
             )
 
+            if (saldoInsuficiente) {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "Saldo insuficiente para realizar esta compra.",
+                    color = MaterialTheme.colorScheme.error,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
             Spacer(Modifier.height(16.dp))
 
             Button(
                 onClick = {
+                    if (saldoInsuficiente) return@Button
+                    processing = true
                     vm.finalizarCompra(usuarioId) { id ->
+                        processing = false
                         if (id != null) nav.navigate("pedidoConfirmado/$id")
                     }
                 },
+                enabled = !saldoInsuficiente && !processing,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E676)),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (saldoInsuficiente) Color.Gray else Color(0xFF00E676)
+                ),
                 shape = RoundedCornerShape(8.dp)
             ) {
-                Text("Confirmar Compra", color = Color.Black, fontWeight = FontWeight.Bold)
+                if (processing) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.Black)
+                } else {
+                    Text(
+                        if (saldoInsuficiente) "Saldo Insuficiente" else "Confirmar Compra",
+                        color = Color.Black,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
 
             Spacer(Modifier.height(16.dp))
