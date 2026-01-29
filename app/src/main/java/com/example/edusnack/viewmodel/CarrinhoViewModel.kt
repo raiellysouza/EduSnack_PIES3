@@ -8,17 +8,23 @@ import com.example.edusnack.model.ItemPedido
 import com.example.edusnack.model.Pedido
 import com.example.edusnack.model.StatusPedido
 import com.example.edusnack.repository.PedidoRepository
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import kotlin.random.Random
 
 class CarrinhoViewModel(
-    private val pedidoRepo: PedidoRepository = PedidoRepository()
+    private val pedidoRepo: PedidoRepository = PedidoRepository(),
+    private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
 ) : ViewModel() {
 
     private val _itens = MutableStateFlow<List<CarrinhoItem>>(emptyList())
     val itens = _itens.asStateFlow()
+
+    private val _error = MutableStateFlow<String?>(null)
+    val error = _error.asStateFlow()
 
     fun adicionar(item: Cardapio, dias: List<String> = emptyList()) {
         val atual = _itens.value
@@ -51,16 +57,36 @@ class CarrinhoViewModel(
     fun total(): Double = _itens.value.sumOf { it.subtotal() }
 
     fun limpar() { _itens.value = emptyList() }
+    fun clearError() { _error.value = null }
 
     fun finalizarCompra(usuarioId: String, onDone: (String?) -> Unit) {
         viewModelScope.launch {
             try {
                 if (usuarioId.isBlank()) {
+                    _error.value = "Usuário não identificado"
                     onDone(null)
                     return@launch
                 }
 
-                // Construir um único pedido agregando todos os itens do carrinho
+                val totalPedido = total()
+
+                // 1. Verificar saldo atualizado no Firestore (coleção "usuarios")
+                val usuarioDoc = db.collection("usuarios").document(usuarioId).get().await()
+                if (!usuarioDoc.exists()) {
+                     _error.value = "Perfil de usuário não encontrado"
+                    onDone(null)
+                    return@launch
+                }
+
+                val saldoAtual = usuarioDoc.getDouble("saldo") ?: 0.0
+
+                if (saldoAtual < totalPedido) {
+                    _error.value = "Saldo insuficiente! Você tem R$ ${String.format("%.2f", saldoAtual)}"
+                    onDone(null)
+                    return@launch
+                }
+
+                // 2. Prosseguir com a criação do pedido
                 val itensPedido = _itens.value.map { ci ->
                     ItemPedido(
                         itemId = ci.item.id,
@@ -72,15 +98,9 @@ class CarrinhoViewModel(
                     )
                 }
 
-                // Calcular total considerando diasReserva (cada dia conta como uma unidade)
-                val totalPedido = _itens.value.sumOf { ci ->
-                    val unidades = if (ci.diasReserva.isNotEmpty()) ci.diasReserva.size else ci.quantidade
-                    (ci.item.preco ?: 0.0) * unidades
-                }
-
                 val pedido = Pedido(
                     alunoId = usuarioId,
-                    alunoNome = "", // Preenchido pelo repositório se necessário
+                    alunoNome = "", 
                     turma = "",
                     itens = itensPedido,
                     status = StatusPedido.PENDENTE,
@@ -91,10 +111,16 @@ class CarrinhoViewModel(
                 val res = pedidoRepo.salvarPedido(pedido)
                 val ultimoId = res.getOrNull()
 
-                limpar()
-                onDone(ultimoId)
+                if (ultimoId != null) {
+                    limpar()
+                    onDone(ultimoId)
+                } else {
+                    _error.value = "Erro ao salvar pedido"
+                    onDone(null)
+                }
 
             } catch (e: Exception) {
+                _error.value = "Erro: ${e.message}"
                 onDone(null)
             }
         }
